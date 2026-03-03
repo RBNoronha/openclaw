@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { validateConfigObjectWithPlugins } from "./config.js";
+import { LEGACY_REMOVED_PLUGIN_IDS } from "./validation.js";
 
 async function writePluginFixture(params: {
   dir: string;
@@ -105,44 +106,49 @@ describe("config plugin validation", () => {
   });
 
   it("warns for removed legacy plugin ids instead of failing validation", async () => {
-    const home = await createCaseHome();
-    const removedId = "google-antigravity-auth";
-    const res = validateInHome(home, {
-      agents: { list: [{ id: "pi" }] },
-      plugins: {
-        enabled: false,
-        entries: { [removedId]: { enabled: true } },
-        allow: [removedId],
-        deny: [removedId],
-        slots: { memory: removedId },
-      },
-    });
-    expect(res.ok).toBe(true);
-    if (res.ok) {
-      expect(res.warnings).toEqual(
-        expect.arrayContaining([
-          {
-            path: `plugins.entries.${removedId}`,
-            message:
-              "plugin removed: google-antigravity-auth (stale config entry ignored; remove it from plugins config)",
-          },
-          {
-            path: "plugins.allow",
-            message:
-              "plugin removed: google-antigravity-auth (stale config entry ignored; remove it from plugins config)",
-          },
-          {
-            path: "plugins.deny",
-            message:
-              "plugin removed: google-antigravity-auth (stale config entry ignored; remove it from plugins config)",
-          },
-          {
-            path: "plugins.slots.memory",
-            message:
-              "plugin removed: google-antigravity-auth (stale config entry ignored; remove it from plugins config)",
-          },
-        ]),
-      );
+    // Temporarily inject a test-only removed plugin ID into the validation module's
+    // LEGACY_REMOVED_PLUGIN_IDS set to exercise the removed-plugin warning path.
+    // (google-antigravity-auth was removed from that set in e65057ef9 when it was
+    // reinstated as a real extension.)
+    const removedId = "__test-legacy-removed-plugin__";
+    LEGACY_REMOVED_PLUGIN_IDS.add(removedId);
+    try {
+      const home = await createCaseHome();
+      const res = validateInHome(home, {
+        agents: { list: [{ id: "pi" }] },
+        plugins: {
+          enabled: false,
+          entries: { [removedId]: { enabled: true } },
+          allow: [removedId],
+          deny: [removedId],
+          slots: { memory: removedId },
+        },
+      });
+      expect(res.ok).toBe(true);
+      if (res.ok) {
+        expect(res.warnings).toEqual(
+          expect.arrayContaining([
+            {
+              path: `plugins.entries.${removedId}`,
+              message: `plugin removed: ${removedId} (stale config entry ignored; remove it from plugins config)`,
+            },
+            {
+              path: "plugins.allow",
+              message: `plugin removed: ${removedId} (stale config entry ignored; remove it from plugins config)`,
+            },
+            {
+              path: "plugins.deny",
+              message: `plugin removed: ${removedId} (stale config entry ignored; remove it from plugins config)`,
+            },
+            {
+              path: "plugins.slots.memory",
+              message: `plugin removed: ${removedId} (stale config entry ignored; remove it from plugins config)`,
+            },
+          ]),
+        );
+      }
+    } finally {
+      LEGACY_REMOVED_PLUGIN_IDS.delete(removedId);
     }
   });
 

@@ -23,7 +23,8 @@ import { findLegacyConfigIssues } from "./legacy.js";
 import type { OpenClawConfig, ConfigValidationIssue } from "./types.js";
 import { OpenClawSchema } from "./zod-schema.js";
 
-const LEGACY_REMOVED_PLUGIN_IDS = new Set<string>([]);
+// Exported for test access only (allows tests to inject stub removed IDs).
+export const LEGACY_REMOVED_PLUGIN_IDS = new Set<string>([]);
 
 function isWorkspaceAvatarPath(value: string, workspaceDir: string): boolean {
   const workspaceRoot = path.resolve(workspaceDir);

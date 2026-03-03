@@ -1,4 +1,98 @@
+import fs from "node:fs";
+// Fix world-writable permissions caused by container default POSIX ACLs on /tmp.
+// The discovery.ts security checks reject world-writable paths, so test fixture
+// directories and files need proper (0o755/0o644) permissions.
+// Some container environments (e.g. Codespaces) set a default ACL on /tmp with
+// "other:rw-" that overrides the process umask, giving all new dirs 0o756 and
+// files 0o646 — both world-writable. We monkey-patch the core fs creation
+// functions to auto-chmod after each creation. Tests that intentionally need
+// world-writable paths (e.g. "blocks world-writable plugin paths") still work
+// because they explicitly call fs.chmodSync(path, 0o777) afterwards.
+import path from "node:path";
 import { afterAll, afterEach, beforeEach, vi } from "vitest";
+
+/** chmod all newly-created dirs from firstCreated down to leafDir (inclusive). */
+function chmodNewDirs(leafDir: string, firstCreated: string | undefined): void {
+  const leaf = path.resolve(leafDir);
+  try {
+    fs.chmodSync(leaf, 0o755);
+  } catch {
+    /* ignore */
+  }
+  if (typeof firstCreated === "string") {
+    const top = path.resolve(firstCreated);
+    let cur = path.dirname(leaf);
+    while (cur.length >= top.length && cur !== top && cur !== path.dirname(cur)) {
+      try {
+        fs.chmodSync(cur, 0o755);
+      } catch {
+        /* ignore */
+      }
+      cur = path.dirname(cur);
+    }
+    try {
+      fs.chmodSync(top, 0o755);
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+const _origMkdirSync = fs.mkdirSync.bind(fs);
+(fs as Record<string, unknown>).mkdirSync = function patchedMkdirSync(
+  dirPath: Parameters<typeof fs.mkdirSync>[0],
+  options: Parameters<typeof fs.mkdirSync>[1],
+): ReturnType<typeof fs.mkdirSync> {
+  const firstCreated = _origMkdirSync(dirPath, options);
+  if (typeof dirPath === "string") {
+    chmodNewDirs(dirPath, firstCreated);
+  }
+  return firstCreated;
+};
+
+const _origWriteFileSync = fs.writeFileSync.bind(fs);
+(fs as Record<string, unknown>).writeFileSync = function patchedWriteFileSync(
+  filePath: Parameters<typeof fs.writeFileSync>[0],
+  data: Parameters<typeof fs.writeFileSync>[1],
+  options: Parameters<typeof fs.writeFileSync>[2],
+): void {
+  _origWriteFileSync(filePath, data, options);
+  if (typeof filePath === "string") {
+    try {
+      fs.chmodSync(filePath, 0o644);
+    } catch {
+      // ignore
+    }
+  }
+};
+
+const _origMkdirAsync = fs.promises.mkdir.bind(fs.promises);
+(fs.promises as Record<string, unknown>).mkdir = async function patchedMkdirAsync(
+  dirPath: Parameters<typeof fs.promises.mkdir>[0],
+  options: Parameters<typeof fs.promises.mkdir>[1],
+): Promise<string | undefined> {
+  const firstCreated = await _origMkdirAsync(dirPath, options);
+  if (typeof dirPath === "string") {
+    chmodNewDirs(dirPath, firstCreated);
+  }
+  return firstCreated;
+};
+
+const _origWriteFileAsync = fs.promises.writeFile.bind(fs.promises);
+(fs.promises as Record<string, unknown>).writeFile = async function patchedWriteFileAsync(
+  filePath: Parameters<typeof fs.promises.writeFile>[0],
+  data: Parameters<typeof fs.promises.writeFile>[1],
+  options: Parameters<typeof fs.promises.writeFile>[2],
+): Promise<void> {
+  await _origWriteFileAsync(filePath, data, options);
+  if (typeof filePath === "string") {
+    try {
+      await fs.promises.chmod(filePath, 0o644);
+    } catch {
+      // ignore
+    }
+  }
+};
 
 // Ensure Vitest environment is properly set
 process.env.VITEST = "true";
