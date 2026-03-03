@@ -18,5 +18,11 @@
   "typescript.reportStyleChecksAsWarnings": false,
   "typescript.updateImportsOnFileMove.enabled": "always",
   "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.experimental.useTsgo": true
+  "typescript.experimental.useTsgo": true,
+  "markdown.validate.enabled": true,
+  "python.defaultInterpreterPath": "/home/codespace/.python/current/bin/python3",
+  "python.pythonPath": "/home/codespace/.python/current/bin/python3",
+  "editor.wordWrap": "on",
+  "chat.agent.maxRequests": 100,
+  "chat.customAgentInSubagent.enabled": true
 }
