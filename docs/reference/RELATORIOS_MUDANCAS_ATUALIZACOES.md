@@ -5,6 +5,87 @@
 
 ---
 
+## [2026-03-03] SOUL.md — melhorias com padrões avançados da análise de prompts
+
+### Contexto
+
+Revisão dos SOUL.md dos 8 agentes do time de desenvolvimento para incorporar padrões identificados na análise de system prompts em `/workspaces/openclaw/Prompts/Orientacoes/analysis_of_system_prompts_for_multiagents.md`. Os arquivos anteriores já cobriavam os padrões principais, mas faltavam padrões de anti-destilação, Yap Score, Hermes Highlights, Canvas artifacts e Personas plugáveis.
+
+### Agentes Atualizados
+
+| Agente           | Padrões Adicionados                                                                                         |
+| ---------------- | ----------------------------------------------------------------------------------------------------------- |
+| `orquestrador`   | Memória conversacional (Claude Opus pattern) + Anti-destilação                                              |
+| `researcher`     | Yap Score 4096 (o3 API pattern)                                                                             |
+| `reviewer`       | Hermes Highlights tipados (`weakness`, `evidence`, `suggestion`, `factcheck`, `question`) + Anti-destilação |
+| `tester`         | Anti-destilação (chain-of-thought interno permanece interno)                                                |
+| `copywriter`     | Canvas/Textdoc artifacts (GPT-4.5 pattern) + Hermes Highlights para feedback de copy                        |
+| `designer`       | Anti-destilação                                                                                             |
+| `social-monitor` | Personas plugáveis (Grok Personas pattern) + Yap Score 3072 + Anti-destilação                               |
+
+### Padrões de Referência
+
+| Padrão                 | Fonte Original                                                        |
+| ---------------------- | --------------------------------------------------------------------- |
+| Anti-destilação        | Gemini 3.1 Pro API — nunca expor chain-of-thought completo            |
+| Yap Score              | o3 API — calibrar verbosidade por agente (`Yap: N`)                   |
+| Hermes Highlights      | Hermes — annotations inline tipadas para feedback estruturado         |
+| Canvas/Textdoc         | GPT-4.5 — artefatos de texto paralelos à conversa principal           |
+| Personas plugáveis     | Grok Personas — troca de tom sem alterar capacidades técnicas         |
+| Memória conversacional | Claude Opus 4.6 — detectar referências implícitas a contexto anterior |
+
+---
+
+## [2026-03-03] Plugins google-antigravity-auth e google-gemini-cli-auth habilitados
+
+### Contexto
+
+Após a implementação do código OAuth no repositório, os plugins precisavam ser ativados explicitamente no `openclaw.json`. Ambos são plugins de autenticação OAuth sem esquema de configuração adicional — apenas `enabled: true`.
+
+### Mudanças
+
+- **`/workspaces/.openclaw/openclaw.json`**: adicionado `plugins.entries.google-antigravity-auth: {enabled: true}` e `plugins.entries.google-gemini-cli-auth: {enabled: true}`
+- Gateway reiniciado — ambos confirmados como `loaded`:
+  - `google-antigravity-auth` — provedor `google-antigravity` ativo
+  - `google-gemini-cli-auth` — provedor `google-gemini-cli` ativo
+
+### Observação Importante
+
+O primeiro uso de cada provedor requer completar um fluxo OAuth interativo (`openclaw providers auth google-antigravity` / `openclaw providers auth google-gemini-cli`). No Codespace, o callback precisa de `--no-open` + URL manual ou forwarding de porta para o browser local.
+
+---
+
+## [2026-03-03] memory-lancedb — GitHub Models como embedding primário + Azure fallback
+
+### Contexto
+
+Substituição do embedding primário do memory-lancedb de Azure OpenAI para GitHub Models (PAT-based, gratuito no Codespace via `GITHUB_TOKEN`), mantendo Azure como fallback silencioso.
+
+### Arquivos Modificados
+
+| Arquivo                               | Mudança                                                                                                                                                                                                                                       |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extensions/memory-lancedb/config.ts` | Adicionado tipo `EmbeddingConfig`; campo `embeddingFallback?: EmbeddingConfig` em `MemoryConfig`; nomes `openai/text-embedding-3-small` e `openai/text-embedding-3-large` em `EMBEDDING_DIMENSIONS`; parse e validação de `embeddingFallback` |
+| `extensions/memory-lancedb/index.ts`  | Classe `Embeddings` aceita 4º param `fallback`; cria `fallbackClient` + `fallbackModel`; `embed()` envolve chamada primária em try/catch e faz retry com fallback                                                                             |
+| `/workspaces/.openclaw/openclaw.json` | Embedding primário: `${GITHUB_TOKEN}` → `https://models.github.ai/inference` → `openai/text-embedding-3-small` (dim 1536); fallback: Azure key → `https://azrblnai.openai.azure.com/...` → `text-embedding-3-small`                           |
+
+### Resultado
+
+- `memory-lancedb` inicializado com sucesso: `model: openai/text-embedding-3-small` (GitHub Models)
+- Fallback automático e transparente para Azure se GitHub Models falhar
+
+---
+
+## [2026-03-03] Orquestrador — modelo primário restaurado para kimi-coding/k2p5
+
+### Mudança
+
+- Revertido o modelo primário do agente `orquestrador` de `anthropic/claude-sonnet-4-6` para `kimi-coding/k2p5`
+- `anthropic/claude-sonnet-4-6` permanece como fallback
+- **Justificativa**: kimi-coding/k2p5 era o modelo intencionado originalmente; a troca anterior foi temporária para teste
+
+---
+
 ## [2026-03-03] Rebuild e push de imagens Docker para ACR e Docker Hub
 
 ### Contexto

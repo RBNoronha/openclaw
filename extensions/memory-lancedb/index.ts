@@ -162,21 +162,40 @@ class MemoryDB {
 
 class Embeddings {
   private client: OpenAI;
+  private fallbackClient?: OpenAI;
+  private fallbackModel?: string;
 
   constructor(
     apiKey: string,
     private model: string,
     baseUrl?: string,
+    fallback?: { apiKey: string; model: string; baseUrl?: string },
   ) {
     this.client = new OpenAI({ apiKey, baseURL: baseUrl });
+    if (fallback) {
+      this.fallbackClient = new OpenAI({ apiKey: fallback.apiKey, baseURL: fallback.baseUrl });
+      this.fallbackModel = fallback.model;
+    }
   }
 
   async embed(text: string): Promise<number[]> {
-    const response = await this.client.embeddings.create({
-      model: this.model,
-      input: text,
-    });
-    return response.data[0].embedding;
+    try {
+      const response = await this.client.embeddings.create({
+        model: this.model,
+        input: text,
+      });
+      return response.data[0].embedding;
+    } catch (err) {
+      if (this.fallbackClient && this.fallbackModel) {
+        // Primary failed — try fallback silently
+        const response = await this.fallbackClient.embeddings.create({
+          model: this.fallbackModel,
+          input: text,
+        });
+        return response.data[0].embedding;
+      }
+      throw err;
+    }
   }
 }
 
@@ -298,7 +317,18 @@ const memoryPlugin = {
 
     const vectorDim = dimensions ?? vectorDimsForModel(model);
     const db = new MemoryDB(resolvedDbPath, vectorDim);
-    const embeddings = new Embeddings(apiKey, model, baseUrl);
+    const embeddings = new Embeddings(
+      apiKey,
+      model,
+      baseUrl,
+      cfg.embeddingFallback
+        ? {
+            apiKey: cfg.embeddingFallback.apiKey,
+            model: cfg.embeddingFallback.model,
+            baseUrl: cfg.embeddingFallback.baseUrl,
+          }
+        : undefined,
+    );
 
     api.logger.info(`memory-lancedb: plugin registered (db: ${resolvedDbPath}, lazy init)`);
 

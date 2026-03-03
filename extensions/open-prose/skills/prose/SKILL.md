@@ -1,6 +1,6 @@
 ---
 name: prose
-description: OpenProse VM skill pack. Activate on any `prose` command, .prose files, or OpenProse mentions; orchestrates multi-agent workflows.
+description: Pacote de habilidades OpenProse VM. Ative em qualquer comando `prose`, arquivos .prose ou menções OpenProse; coordena fluxos de trabalho com vários agentes.
 metadata: { "openclaw": { "emoji": "🪶", "homepage": "https://www.prose.md" } }
 ---
 

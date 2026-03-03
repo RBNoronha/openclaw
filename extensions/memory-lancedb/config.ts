@@ -2,14 +2,18 @@ import fs from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
+export type EmbeddingConfig = {
+  provider: "openai";
+  model: string;
+  apiKey: string;
+  baseUrl?: string;
+  dimensions?: number;
+};
+
 export type MemoryConfig = {
-  embedding: {
-    provider: "openai";
-    model: string;
-    apiKey: string;
-    baseUrl?: string;
-    dimensions?: number;
-  };
+  embedding: EmbeddingConfig;
+  /** Optional fallback embedding provider if primary fails */
+  embeddingFallback?: EmbeddingConfig;
   dbPath?: string;
   autoCapture?: boolean;
   autoRecall?: boolean;
@@ -53,6 +57,9 @@ const DEFAULT_DB_PATH = resolveDefaultDbPath();
 const EMBEDDING_DIMENSIONS: Record<string, number> = {
   "text-embedding-3-small": 1536,
   "text-embedding-3-large": 3072,
+  // GitHub Models uses provider-prefixed names
+  "openai/text-embedding-3-small": 1536,
+  "openai/text-embedding-3-large": 3072,
 };
 
 function assertAllowedKeys(value: Record<string, unknown>, allowed: string[], label: string) {
@@ -97,7 +104,7 @@ export const memoryConfigSchema = {
     const cfg = value as Record<string, unknown>;
     assertAllowedKeys(
       cfg,
-      ["embedding", "dbPath", "autoCapture", "autoRecall", "captureMaxChars"],
+      ["embedding", "embeddingFallback", "dbPath", "autoCapture", "autoRecall", "captureMaxChars"],
       "memory config",
     );
 
@@ -108,6 +115,29 @@ export const memoryConfigSchema = {
     assertAllowedKeys(embedding, ["apiKey", "model", "baseUrl", "dimensions"], "embedding config");
 
     const model = resolveEmbeddingModel(embedding);
+
+    // Parse optional fallback embedding config
+    const fallbackRaw = cfg.embeddingFallback as Record<string, unknown> | undefined;
+    let embeddingFallback: MemoryConfig["embeddingFallback"] | undefined;
+    if (fallbackRaw && typeof fallbackRaw === "object") {
+      if (typeof fallbackRaw.apiKey !== "string") {
+        throw new Error("embeddingFallback.apiKey is required when embeddingFallback is set");
+      }
+      assertAllowedKeys(
+        fallbackRaw,
+        ["apiKey", "model", "baseUrl", "dimensions"],
+        "embeddingFallback config",
+      );
+      const fallbackModel = resolveEmbeddingModel(fallbackRaw);
+      embeddingFallback = {
+        provider: "openai",
+        model: fallbackModel,
+        apiKey: resolveEnvVars(fallbackRaw.apiKey),
+        baseUrl:
+          typeof fallbackRaw.baseUrl === "string" ? resolveEnvVars(fallbackRaw.baseUrl) : undefined,
+        dimensions: typeof fallbackRaw.dimensions === "number" ? fallbackRaw.dimensions : undefined,
+      };
+    }
 
     const captureMaxChars =
       typeof cfg.captureMaxChars === "number" ? Math.floor(cfg.captureMaxChars) : undefined;
@@ -127,6 +157,7 @@ export const memoryConfigSchema = {
           typeof embedding.baseUrl === "string" ? resolveEnvVars(embedding.baseUrl) : undefined,
         dimensions: typeof embedding.dimensions === "number" ? embedding.dimensions : undefined,
       },
+      embeddingFallback,
       dbPath: typeof cfg.dbPath === "string" ? cfg.dbPath : DEFAULT_DB_PATH,
       autoCapture: cfg.autoCapture === true,
       autoRecall: cfg.autoRecall !== false,
