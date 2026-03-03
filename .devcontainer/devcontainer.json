@@ -1,0 +1,4 @@
+{
+  "name": "OpenClaw Dev",
+  "postStartCommand": "bash /workspaces/openclaw/scripts/start-gateway.sh"
+}
