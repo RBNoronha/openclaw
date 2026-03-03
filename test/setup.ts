@@ -15,7 +15,11 @@ import { afterAll, afterEach, beforeEach, vi } from "vitest";
 function chmodNewDirs(leafDir: string, firstCreated: string | undefined): void {
   const leaf = path.resolve(leafDir);
   try {
-    fs.chmodSync(leaf, 0o755);
+    const mode = fs.statSync(leaf).mode & 0o777;
+    // Only remove the world-write bit; preserve other permission bits.
+    if (mode & 0o002) {
+      fs.chmodSync(leaf, mode & ~0o002);
+    }
   } catch {
     /* ignore */
   }
@@ -24,14 +28,20 @@ function chmodNewDirs(leafDir: string, firstCreated: string | undefined): void {
     let cur = path.dirname(leaf);
     while (cur.length >= top.length && cur !== top && cur !== path.dirname(cur)) {
       try {
-        fs.chmodSync(cur, 0o755);
+        const mode = fs.statSync(cur).mode & 0o777;
+        if (mode & 0o002) {
+          fs.chmodSync(cur, mode & ~0o002);
+        }
       } catch {
         /* ignore */
       }
       cur = path.dirname(cur);
     }
     try {
-      fs.chmodSync(top, 0o755);
+      const mode = fs.statSync(top).mode & 0o777;
+      if (mode & 0o002) {
+        fs.chmodSync(top, mode & ~0o002);
+      }
     } catch {
       /* ignore */
     }
@@ -59,7 +69,11 @@ const _origWriteFileSync = fs.writeFileSync.bind(fs);
   _origWriteFileSync(filePath, data, options);
   if (typeof filePath === "string") {
     try {
-      fs.chmodSync(filePath, 0o644);
+      // Only remove the world-write bit; preserve intentionally restrictive modes (e.g. 0o600).
+      const mode = fs.statSync(filePath).mode & 0o777;
+      if (mode & 0o002) {
+        fs.chmodSync(filePath, mode & ~0o002);
+      }
     } catch {
       // ignore
     }
@@ -87,7 +101,11 @@ const _origWriteFileAsync = fs.promises.writeFile.bind(fs.promises);
   await _origWriteFileAsync(filePath, data, options);
   if (typeof filePath === "string") {
     try {
-      await fs.promises.chmod(filePath, 0o644);
+      // Only remove the world-write bit; preserve intentionally restrictive modes (e.g. 0o600).
+      const mode = (await fs.promises.stat(filePath)).mode & 0o777;
+      if (mode & 0o002) {
+        await fs.promises.chmod(filePath, mode & ~0o002);
+      }
     } catch {
       // ignore
     }
