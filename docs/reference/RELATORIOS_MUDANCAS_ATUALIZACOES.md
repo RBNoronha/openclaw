@@ -5,6 +5,39 @@
 
 ---
 
+## [2026-03-03] Liberação de Acesso Elevated via Telegram e WhatsApp
+
+### Problema
+
+Pedidos via Telegram e WhatsApp eram negados com:
+
+```
+elevated is not available right now (runtime=sandboxed).
+Failing gates: allowFrom (tools.elevated.allowFrom.telegram)
+```
+
+Causa raiz dupla:
+
+1. `agents.defaults.sandbox.mode = "non-main"` — sessões não-principais (Telegram, WhatsApp) rodavam em modo sandboxed, sem acesso a ferramentas de exec/process/read/write
+2. `tools.elevated.allowFrom` não configurado para Telegram/WhatsApp
+
+### Mudanças aplicadas em `~/.openclaw/openclaw.json`
+
+| Chave                               | Antes        | Depois                            |
+| ----------------------------------- | ------------ | --------------------------------- |
+| `agents.defaults.sandbox.mode`      | `"non-main"` | `"off"`                           |
+| `tools.elevated.enabled`            | não definido | `true`                            |
+| `tools.elevated.allowFrom.telegram` | não definido | `[756499526]`                     |
+| `tools.elevated.allowFrom.whatsapp` | não definido | `["556185524929@s.whatsapp.net"]` |
+
+### Resultado
+
+- `runtime: sandboxed` → `runtime: direct`
+- O comando `/elevated on` via Telegram agora liberado para o usuário `756499526`
+- Ferramentas `exec`, `process`, `read`, `write`, `edit` disponíveis nas sessões Telegram/WhatsApp
+
+---
+
 ## [2026-03-03] Ativação de Plugins: Memória Vetorial + Workflows + Utilitários
 
 ### Plugins Ativados
