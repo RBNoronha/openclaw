@@ -1,4 +1,80 @@
-# Google Antigravity Integration — Changelog v2026.3.2
+# Relatório de Mudanças e Atualizações — OpenClaw
+
+> Este documento é atualizado a cada mudança, melhoria ou configuração aplicada ao ambiente OpenClaw.
+> Ordem: mais recente primeiro.
+
+---
+
+## [2026-03-03] Ativação de Plugins: Memória Vetorial + Workflows + Utilitários
+
+### Plugins Ativados
+
+| Plugin           | ID               | Slot / Tipo                              |
+| ---------------- | ---------------- | ---------------------------------------- |
+| Memory (LanceDB) | `memory-lancedb` | Slot `memory` (substituiu `memory-core`) |
+| LLM Task         | `llm-task`       | Ferramenta                               |
+| Lobster          | `lobster`        | Workflow                                 |
+| Diffs            | `diffs`          | Utilitário                               |
+| OpenProse        | `open-prose`     | Comando `/prose`                         |
+
+### Detalhes
+
+#### `memory-lancedb` — Memória vetorial persistente
+
+- Substitui o `memory-core` (file-backed) pelo LanceDB (vetorial + semântico)
+- Dependências instaladas em `extensions/memory-lancedb/node_modules/`
+- Slot de memória trocado via `plugins.slots.memory = "memory-lancedb"`
+- Backend de embeddings: **Azure OpenAI** (`text-embedding-3-small`, endpoint `azrblnai.openai.azure.com`)
+- `autoRecall: true` — injeta memórias relevantes automaticamente no contexto
+- `autoCapture: true` — captura informações importantes das conversas
+- Banco de dados em: `~/.openclaw/memory/lancedb`
+
+#### `llm-task` — Tarefas LLM estruturadas
+
+Ferramenta JSON para workflows que exigem chamadas LLM com saída tipada. Útil para pipelines automatizados.
+
+#### `lobster` — Workflows com aprovação
+
+Permite workflows pausáveis com comandos `/approve` e `/reject` para revisão humana antes de executar ações.
+
+#### `diffs` — Viewer de diffs e imagens
+
+Exibe diffs de código e imagens diretamente nos agentes.
+
+#### `open-prose` — Escrita assistida
+
+Adiciona o comando `/prose` para tarefas de escrita, revisão e formatação de texto.
+
+### Configuração aplicada em `~/.openclaw/openclaw.json`
+
+```json
+"plugins": {
+  "slots": { "memory": "memory-lancedb" },
+  "entries": {
+    "llm-task":       { "enabled": true },
+    "lobster":        { "enabled": true },
+    "diffs":          { "enabled": true },
+    "open-prose":     { "enabled": true },
+    "memory-lancedb": {
+      "enabled": true,
+      "config": {
+        "embedding": {
+          "apiKey": "<azure-openai-key>",
+          "baseUrl": "https://azrblnai.openai.azure.com/openai/deployments/text-embedding-3-small/",
+          "model": "text-embedding-3-small"
+        },
+        "autoRecall": true,
+        "autoCapture": true
+      }
+    },
+    "memory-core": { "enabled": false }
+  }
+}
+```
+
+---
+
+## [2026-03-03] Google Antigravity Integration — v2026.3.2
 
 Este documento descreve todas as mudanças realizadas no repositório OpenClaw para habilitar o provedor **google-antigravity** (Google One AI Premium / Google Cloud Antigravity sandbox) com autenticação OAuth, suporte ao modelo `gemini-3.1-pro-preview`, e compatibilidade do pipeline de ferramentas.
 
