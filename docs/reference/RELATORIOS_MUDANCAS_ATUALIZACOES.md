@@ -5,6 +5,195 @@
 
 ---
 
+## [2026-03-03] Tradução de descriptions dos comandos de barra para PT-BR
+
+**Arquivo:** `src/auto-reply/commands-registry.data.ts`
+
+Todas as propriedades `description` dos comandos de barra definidos em `buildChatCommands()` foram traduzidas do inglês para PT-BR. Também foram traduzidas as `description` de alguns argumentos (`args`) internos onde aplicável.
+
+| Comando                      | Antes                                                              | Depois                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `/help`                      | `Show available commands.`                                         | `Mostrar comandos disponíveis.`                                                            |
+| `/commands`                  | `List all slash commands.`                                         | `Listar todos os comandos de barra.`                                                       |
+| `/skill`                     | `Run a skill by name.`                                             | `Execute uma habilidade pelo nome.`                                                        |
+| `/skill` arg `name`          | `Skill name`                                                       | `Nome da habilidade`                                                                       |
+| `/skill` arg `input`         | `Skill input`                                                      | `Contribuição de habilidades`                                                              |
+| `/status`                    | `Show current status.`                                             | `Mostrar estado atual.`                                                                    |
+| `/allowlist`                 | `List/add/remove allowlist entries.`                               | `Listar/adicionar/remover entradas da lista de permissões.`                                |
+| `/approve`                   | `Approve or deny exec requests.`                                   | `Aprove ou negue solicitações executivas.`                                                 |
+| `/context`                   | `Explain how context is built and used.`                           | `Explique como o contexto é construído e usado.`                                           |
+| `/export-session`            | `Export current session to HTML file with full system prompt.`     | `Exporte a sessão atual para um arquivo HTML com prompt completo do sistema.`              |
+| `/export-session` arg `path` | `Output path (default: workspace)`                                 | `Caminho de saída (padrão: espaço de trabalho)`                                            |
+| `/tts`                       | `Control text-to-speech (TTS).`                                    | `Controle a conversão de texto em fala (TTS).`                                             |
+| `/tts` arg `value`           | `Provider, limit, or text`                                         | `Provedor, limite ou texto`                                                                |
+| `/whoami`                    | `Show your sender id.`                                             | `Mostre seu ID de remetente.`                                                              |
+| `/session`                   | `Manage session-level settings (for example /session idle).`       | `Gerenciar configurações no nível da sessão (por exemplo, /sessão inativa).`               |
+| `/subagents`                 | `List, kill, log, spawn, or steer subagent runs for this session.` | `Listar, eliminar, registrar, gerar ou orientar execuções de subagentes para esta sessão.` |
+| `/acp`                       | `Manage ACP sessions and runtime options.`                         | `Gerencie sessões ACP e opções de tempo de execução.`                                      |
+| `/debug`                     | `Set runtime debug overrides.`                                     | `Defina substituições de depuração em tempo de execução.`                                  |
+| `/usage`                     | `Usage footer or cost summary.`                                    | `Rodapé de uso ou resumo de custos.`                                                       |
+| `/stop`                      | `Stop the current run.`                                            | `Interrompa a execução atual.`                                                             |
+| `/activation`                | `Set group activation mode.`                                       | `Definir modo de ativação do grupo.`                                                       |
+| `/send`                      | `Set send policy.`                                                 | `Definir política de envio.`                                                               |
+| `/reset`                     | `Reset the current session.`                                       | `Redefinir a sessão atual.`                                                                |
+| `/new`                       | `Start a new session.`                                             | `SIniciar uma nova sessão.`                                                                |
+| `/compact`                   | `Compact the session context.`                                     | `Compactar o contexto da sessão.`                                                          |
+| `/think`                     | `Set thinking level.`                                              | `Definir nível de raciocínio.`                                                             |
+| `/verbose`                   | `Toggle verbose mode.`                                             | `Alternar modo detalhado.`                                                                 |
+| `/reasoning`                 | `Toggle reasoning visibility.`                                     | `Alternar visibilidade do raciocínio.`                                                     |
+| `/elevated`                  | `Toggle elevated mode.`                                            | `Alternar modo elevado.`                                                                   |
+| `/exec`                      | `Set exec defaults for this session.`                              | `Definir padrões de execução para esta sessão.`                                            |
+| `/model`                     | `Show or set the model.`                                           | `Mostrar ou definir o modelo.`                                                             |
+| `/models`                    | `List model providers or provider models.`                         | `Listar fornecedores de modelos ou modelos de fornecedores.`                               |
+| `/queue`                     | `Adjust queue settings.`                                           | `Ajustar configurações da fila.`                                                           |
+| `/bash`                      | `Run host shell commands (host-only).`                             | `Executar comandos do shell do host (apenas no host).`                                     |
+
+> **Nota:** Os campos `description` dos argumentos internos (como `choices`, `type`, `captureRemaining`) e os valores de `argsMenu.title` **não** foram alterados — permanecem em inglês pois são texto técnico/de sistema.
+
+---
+
+## [2026-03-03] Auto-tradução de descriptions de Skills para PT-BR
+
+### Contexto
+
+Todas as skills do diretório `skills/` do repositório tinham a propriedade `description:` em inglês. Duas ações foram tomadas:
+
+1. **Tradução manual em lote** — todos os arquivos `SKILL.md` do diretório `skills/` (43 arquivos) tiveram a `description` traduzida para PT-BR.
+2. **Funcionalidade de auto-tradução automática** — nova feature no core que detecta novos `SKILL.md` adicionados (ex: via `clawhub install`) e traduz automaticamente a `description` para PT-BR via chamada a um endpoint LLM compatível com OpenAI.
+
+---
+
+### 1. Traduções manuais em lote
+
+**43 arquivos `skills/*/SKILL.md` modificados.** Cada `description:` foi reescrita em PT-BR mantendo nomes de ferramentas, binários, CLIs e paths no original. Lista completa:
+
+| Skill                | Descrição traduzida (resumida)                                       |
+| -------------------- | -------------------------------------------------------------------- |
+| `coding-agent`       | Delegue tarefas de codificação para agentes Codex, Claude Code ou Pi |
+| `github`             | Operações GitHub via CLI `gh`                                        |
+| `wacli`              | Envie mensagens WhatsApp via CLI wacli                               |
+| `sag`                | Síntese de voz com ElevenLabs no estilo do `say` do macOS            |
+| `oracle`             | Melhores práticas para CLI oracle                                    |
+| `eightctl`           | Controle pods Eight Sleep                                            |
+| `obsidian`           | Trabalhe com vaults do Obsidian                                      |
+| `gog`                | CLI do Google Workspace                                              |
+| `xurl`               | Requisições autenticadas à API do X (Twitter)                        |
+| `nano-banana-pro`    | Gere/edite imagens via Gemini 3 Pro Image                            |
+| `goplaces`           | API Google Places via CLI goplaces                                   |
+| `nano-pdf`           | Edite PDFs com linguagem natural                                     |
+| `himalaya`           | CLI para e-mails via IMAP/SMTP                                       |
+| `healthcheck`        | Hardening de segurança para deployments OpenClaw                     |
+| `openai-image-gen`   | Gere imagens em lote via API OpenAI                                  |
+| `voice-call`         | Inicie chamadas de voz via plugin voice-call                         |
+| `slack`              | Controle o Slack via ferramenta slack                                |
+| `camsnap`            | Capture frames de câmeras RTSP/ONVIF                                 |
+| `ordercli`           | CLI Foodora para pedidos                                             |
+| `imsg`               | CLI iMessage/SMS                                                     |
+| `openai-whisper`     | Reconhecimento de voz local                                          |
+| `model-usage`        | Uso/custo por modelo via CodexBar CLI                                |
+| `discord`            | Operações Discord via ferramenta de mensagens                        |
+| `blucli`             | CLI BluOS para Sonos                                                 |
+| `openai-whisper-api` | Transcrição via API Whisper da OpenAI                                |
+| `skill-creator`      | Crie/atualize AgentSkills                                            |
+| `blogwatcher`        | Monitore blogs e feeds RSS/Atom                                      |
+| `openhue`            | Controle Philips Hue via CLI OpenHue                                 |
+| `clawhub`            | CLI ClawHub para buscar/instalar/publicar skills                     |
+| `gemini`             | CLI Gemini para Q&A e geração                                        |
+| `apple-reminders`    | Lembretes da Apple via CLI remindctl                                 |
+| `mcporter`           | CLI para servidores/ferramentas MCP                                  |
+| `video-frames`       | Extraia frames de vídeos com ffmpeg                                  |
+| `sherpa-onnx-tts`    | Síntese de voz local via sherpa-onnx                                 |
+| `1password`          | CLI do 1Password                                                     |
+| `apple-notes`        | Notas da Apple via CLI `memo`                                        |
+| `bluebubbles`        | iMessages via BlueBubbles                                            |
+| `notion`             | API Notion para páginas, databases e blocos                          |
+| `gifgrep`            | Pesquise GIFs com CLI/TUI                                            |
+| `session-logs`       | Pesquise logs de sessão com jq                                       |
+| `weather`            | Clima via wttr.in ou Open-Meteo                                      |
+| `bear-notes`         | Notas Bear via CLI grizzly                                           |
+| `peekaboo`           | Capture a UI do macOS com CLI Peekaboo                               |
+| `trello`             | Boards, listas e cards Trello via REST API                           |
+
+---
+
+### 2. Funcionalidade: auto-tradução automática ao instalar skills
+
+#### Arquivos criados/modificados
+
+| Arquivo                               | Tipo       | Natureza                                                                        |
+| ------------------------------------- | ---------- | ------------------------------------------------------------------------------- |
+| `src/agents/skills/auto-translate.ts` | Novo       | Módulo de detecção de idioma + chamada LLM + patch em disco                     |
+| `src/agents/skills/refresh.ts`        | Modificado | Intercepta evento `"add"` do watcher para iniciar tradução                      |
+| `src/config/types.skills.ts`          | Modificado | Novo tipo `SkillsAutoTranslateConfig` + campo `autoTranslate` em `SkillsConfig` |
+
+#### Detalhes técnicos
+
+**`src/agents/skills/auto-translate.ts`**
+
+- `looksLikePtBr(text)` — heurística por densidade de acentos PT-BR e palavras-chave comuns
+- `autoTranslateSkillDescription(filePath, config)` — pipeline completo:
+  1. Verifica se `skills.autoTranslate.enabled` está ativo
+  2. Lê o `SKILL.md` e extrai a `description` do frontmatter
+  3. Chama `looksLikePtBr()` — pula se já estiver traduzido
+  4. Chama o endpoint LLM compatível com OpenAI (`chat/completions`) com prompt de tradução técnica
+  5. Reescreve o `description:` no arquivo usando `replaceDescriptionBlock()` (suporta inline, quoted e block-scalar YAML)
+  6. Fire-and-forget — nunca lança erro, tudo é logado via `skills/auto-translate`
+
+**`src/agents/skills/refresh.ts`**
+
+- Evento `"add"` no watcher chokidar agora: para arquivos `SKILL.md` com `autoTranslate.enabled`, chama `autoTranslateSkillDescription` antes de executar `schedule(p)` para bumpar o snapshot de skills.
+
+**`src/config/types.skills.ts`**
+
+```typescript
+export type SkillsAutoTranslateConfig = {
+  enabled?: boolean; // default: false
+  endpoint?: string; // OpenAI-compatible base URL
+  apiKey?: SecretInput; // plain string ou SecretRef
+  model?: string; // default: "kimi-k2-5"
+  targetLocale?: string; // default: "pt-BR"
+};
+```
+
+#### Configuração (via `openclaw config set` ou `openclaw.json`)
+
+```bash
+openclaw config set skills.autoTranslate.enabled true
+openclaw config set skills.autoTranslate.endpoint "https://api.moonshot.cn/v1"
+openclaw config set skills.autoTranslate.apiKey "sk-kimi-..."
+openclaw config set skills.autoTranslate.model "kimi-k2-5"
+```
+
+Ou diretamente no `~/.openclaw/openclaw.json`:
+
+```json
+{
+  "skills": {
+    "autoTranslate": {
+      "enabled": true,
+      "endpoint": "https://api.moonshot.cn/v1",
+      "apiKey": "sk-kimi-...",
+      "model": "kimi-k2-5"
+    }
+  }
+}
+```
+
+#### Fluxo ao instalar uma skill com `clawhub install <nome>`
+
+```
+clawhub install <nome>
+  └─ copia SKILL.md para ~/skills/<nome>/SKILL.md
+       └─ chokidar detecta evento "add"
+            └─ auto-translate.ts: looksLikePtBr? → NÃO
+                 └─ POST endpoint/chat/completions (kimi-k2-5)
+                      └─ replaceDescriptionBlock(content, translated)
+                           └─ writeFileSync → SKILL.md atualizado
+                                └─ schedule(p) → snapshot bumped
+```
+
+---
+
 ## [2026-03-03] Liberação de Acesso Elevated via Telegram e WhatsApp
 
 ### Problema

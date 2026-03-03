@@ -1,6 +1,6 @@
 ---
 name: model-usage
-description: Use CodexBar CLI local cost usage to summarize per-model usage for Codex or Claude, including the current (most recent) model or a full model breakdown. Trigger when asked for model-level usage/cost data from codexbar, or when you need a scriptable per-model summary from codexbar cost JSON.
+description: Use o uso de custo local do CodexBar CLI para resumir o uso por modelo para Codex ou Claude, incluindo o modelo atual (mais recente) ou uma análise completa do modelo. Acione quando for solicitado dados de uso/custo no nível do modelo do codexbar ou quando precisar de um resumo por modelo programável do JSON de custo do codexbar.
 metadata:
   {
     "openclaw":

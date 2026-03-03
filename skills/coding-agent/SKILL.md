@@ -1,6 +1,6 @@
 ---
 name: coding-agent
-description: 'Delegate coding tasks to Codex, Claude Code, or Pi agents via background process. Use when: (1) building/creating new features or apps, (2) reviewing PRs (spawn in temp dir), (3) refactoring large codebases, (4) iterative coding that needs file exploration. NOT for: simple one-liner fixes (just edit), reading code (use read tool), thread-bound ACP harness requests in chat (for example spawn/run Codex or Claude Code in a Discord thread; use sessions_spawn with runtime:"acp"), or any work in ~/clawd workspace (never spawn agents here). Requires a bash tool that supports pty:true.'
+description: 'Delegue tarefas de codificação para agentes Codex, Claude Code ou Pi via processo em segundo plano. Use quando: (1) criando/construindo novos recursos ou apps, (2) revisando PRs (spawn em diretório temporário), (3) refatorando grandes bases de código, (4) codificação iterativa que exige exploração de arquivos. NÃO para: correções simples de uma linha (edite diretamente), leitura de código (use a ferramenta read), requisições ACP harness vinculadas a threads no chat (por exemplo, spawnear/rodar Codex ou Claude Code em thread Discord; use sessions_spawn com runtime:"acp"), ou qualquer trabalho no workspace ~/clawd (nunca spawne agentes aqui). Requer ferramenta bash com suporte a pty:true.'
 metadata:
   {
     "openclaw": { "emoji": "🧩", "requires": { "anyBins": ["claude", "codex", "opencode", "pi"] } },

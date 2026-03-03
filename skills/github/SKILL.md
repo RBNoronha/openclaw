@@ -1,6 +1,6 @@
 ---
 name: github
-description: "GitHub operations via `gh` CLI: issues, PRs, CI runs, code review, API queries. Use when: (1) checking PR status or CI, (2) creating/commenting on issues, (3) listing/filtering PRs or issues, (4) viewing run logs. NOT for: complex web UI interactions requiring manual browser flows (use browser tooling when available), bulk operations across many repos (script with gh api), or when gh auth is not configured."
+description: "Operações GitHub via CLI `gh`: issues, PRs, execuções de CI, revisão de código e consultas à API. Use quando: (1) verificando status de PR ou CI, (2) criando/comentando em issues, (3) listando/filtrando PRs ou issues, (4) visualizando logs de execução. NÃO para: interações complexas com UI web que exigem fluxos manuais no browser (use ferramentas de browser quando disponível), operações em massa em vários repositórios (use gh api) ou quando gh auth não está configurado."
 metadata:
   {
     "openclaw":

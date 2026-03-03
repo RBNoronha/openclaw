@@ -1,6 +1,6 @@
 ---
 name: openai-whisper
-description: Local speech-to-text with the Whisper CLI (no API key).
+description: Reconhecimento de voz local com a CLI Whisper (sem chave de API).
 homepage: https://openai.com/research/whisper
 metadata:
   {

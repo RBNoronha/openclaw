@@ -1,6 +1,6 @@
 ---
 name: blucli
-description: BluOS CLI (blu) for discovery, playback, grouping, and volume.
+description: CLI BluOS (blu) para descoberta, reprodução, agrupamento e controle de volume.
 homepage: https://blucli.sh
 metadata:
   {

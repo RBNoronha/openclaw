@@ -4,6 +4,7 @@ import chokidar, { type FSWatcher } from "chokidar";
 import type { OpenClawConfig } from "../../config/config.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { CONFIG_DIR, resolveUserPath } from "../../utils.js";
+import { autoTranslateSkillDescription } from "./auto-translate.js";
 import { resolvePluginSkillDirs } from "./plugin-skills.js";
 
 type SkillsChangeEvent = {
@@ -196,7 +197,21 @@ export function ensureSkillsWatcher(params: { workspaceDir: string; config?: Ope
     }, debounceMs);
   };
 
-  watcher.on("add", (p) => schedule(p));
+  watcher.on("add", (p) => {
+    // When a new SKILL.md is added, attempt auto-translation before bumping
+    // the snapshot version. Translation is fire-and-forget; any error is
+    // logged by autoTranslateSkillDescription itself.
+    if (path.basename(p) === "SKILL.md" && params.config?.skills?.autoTranslate?.enabled) {
+      void autoTranslateSkillDescription(p, params.config).then((result) => {
+        if (result.translated) {
+          log.info(`Auto-translated skill description at ${p}`);
+        }
+        schedule(p);
+      });
+    } else {
+      schedule(p);
+    }
+  });
   watcher.on("change", (p) => schedule(p));
   watcher.on("unlink", (p) => schedule(p));
   watcher.on("error", (err) => {

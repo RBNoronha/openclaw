@@ -1,5 +1,27 @@
 import type { SecretInput } from "./types.secrets.js";
 
+export type SkillsAutoTranslateConfig = {
+  /**
+   * Enable automatic translation of skill descriptions to PT-BR when a new
+   * SKILL.md is detected by the file watcher. Default: false.
+   */
+  enabled?: boolean;
+  /**
+   * OpenAI-compatible base URL (without trailing slash).
+   * Example: "https://api.moonshot.cn/v1"
+   */
+  endpoint?: string;
+  /** API key for the translation endpoint. */
+  apiKey?: SecretInput;
+  /** Model ID to use for translation. Default: "moonshot-v1-8k" */
+  model?: string;
+  /**
+   * Target language for descriptions. Default: "pt-BR"
+   * Change only if you need a different locale.
+   */
+  targetLocale?: string;
+};
+
 export type SkillConfig = {
   enabled?: boolean;
   apiKey?: SecretInput;
@@ -44,4 +66,9 @@ export type SkillsConfig = {
   install?: SkillsInstallConfig;
   limits?: SkillsLimitsConfig;
   entries?: Record<string, SkillConfig>;
+  /**
+   * Automatically translate skill descriptions to PT-BR when a new SKILL.md
+   * is added to any watched skills directory.
+   */
+  autoTranslate?: SkillsAutoTranslateConfig;
 };

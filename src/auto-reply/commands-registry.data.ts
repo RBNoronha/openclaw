@@ -133,33 +133,33 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "help",
       nativeName: "help",
-      description: "Show available commands.",
+      description: "Mostrar comandos disponíveis.",
       textAlias: "/help",
       category: "status",
     }),
     defineChatCommand({
       key: "commands",
       nativeName: "commands",
-      description: "List all slash commands.",
+      description: "Listar todos os comandos de barra.",
       textAlias: "/commands",
       category: "status",
     }),
     defineChatCommand({
       key: "skill",
       nativeName: "skill",
-      description: "Run a skill by name.",
+      description: "Execute uma habilidade pelo nome.",
       textAlias: "/skill",
       category: "tools",
       args: [
         {
           name: "name",
-          description: "Skill name",
+          description: "Nome da habilidade",
           type: "string",
           required: true,
         },
         {
           name: "input",
-          description: "Skill input",
+          description: "Contribuição de habilidades",
           type: "string",
           captureRemaining: true,
         },
@@ -168,13 +168,13 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "status",
       nativeName: "status",
-      description: "Show current status.",
+      description: "Mostrar estado atual.",
       textAlias: "/status",
       category: "status",
     }),
     defineChatCommand({
       key: "allowlist",
-      description: "List/add/remove allowlist entries.",
+      description: "Listar/adicionar/remover entradas da lista de permissões.",
       textAlias: "/allowlist",
       acceptsArgs: true,
       scope: "text",
@@ -183,7 +183,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "approve",
       nativeName: "approve",
-      description: "Approve or deny exec requests.",
+      description: "Aprove ou negue solicitações executivas.",
       textAlias: "/approve",
       acceptsArgs: true,
       category: "management",
@@ -191,7 +191,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "context",
       nativeName: "context",
-      description: "Explain how context is built and used.",
+      description: "Explique como o contexto é construído e usado.",
       textAlias: "/context",
       acceptsArgs: true,
       category: "status",
@@ -199,14 +199,14 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "export-session",
       nativeName: "export-session",
-      description: "Export current session to HTML file with full system prompt.",
+      description: "Exporte a sessão atual para um arquivo HTML com prompt completo do sistema.",
       textAliases: ["/export-session", "/export"],
       acceptsArgs: true,
       category: "status",
       args: [
         {
           name: "path",
-          description: "Output path (default: workspace)",
+          description: "Caminho de saída (padrão: espaço de trabalho)",
           type: "string",
           required: false,
         },
@@ -215,7 +215,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "tts",
       nativeName: "tts",
-      description: "Control text-to-speech (TTS).",
+      description: "Controle a conversão de texto em fala (TTS).",
       textAlias: "/tts",
       category: "media",
       args: [
@@ -236,7 +236,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
         },
         {
           name: "value",
-          description: "Provider, limit, or text",
+          description: "Provedor, limite ou texto",
           type: "string",
           captureRemaining: true,
         },
@@ -258,14 +258,14 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "whoami",
       nativeName: "whoami",
-      description: "Show your sender id.",
+      description: "Mostre seu ID de remetente.",
       textAlias: "/whoami",
       category: "status",
     }),
     defineChatCommand({
       key: "session",
       nativeName: "session",
-      description: "Manage session-level settings (for example /session idle).",
+      description: "Gerenciar configurações no nível da sessão (por exemplo, /sessão inativa).",
       textAlias: "/session",
       category: "session",
       args: [
@@ -287,7 +287,8 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "subagents",
       nativeName: "subagents",
-      description: "List, kill, log, spawn, or steer subagent runs for this session.",
+      description:
+        "Listar, eliminar, registrar, gerar ou orientar execuções de subagentes para esta sessão.",
       textAlias: "/subagents",
       category: "management",
       args: [
@@ -314,7 +315,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "acp",
       nativeName: "acp",
-      description: "Manage ACP sessions and runtime options.",
+      description: "Gerencie sessões ACP e opções de tempo de execução.",
       textAlias: "/acp",
       category: "management",
       args: [
@@ -445,7 +446,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "debug",
       nativeName: "debug",
-      description: "Set runtime debug overrides.",
+      description: "Defina substituições de depuração em tempo de execução.",
       textAlias: "/debug",
       category: "management",
       args: [
@@ -473,7 +474,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "usage",
       nativeName: "usage",
-      description: "Usage footer or cost summary.",
+      description: "Rodapé de uso ou resumo de custos.",
       textAlias: "/usage",
       category: "options",
       args: [
@@ -489,7 +490,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "stop",
       nativeName: "stop",
-      description: "Stop the current run.",
+      description: "Interrompa a execução atual.",
       textAlias: "/stop",
       category: "session",
     }),
@@ -503,7 +504,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "activation",
       nativeName: "activation",
-      description: "Set group activation mode.",
+      description: "Definir modo de ativação do grupo.",
       textAlias: "/activation",
       category: "management",
       args: [
@@ -519,7 +520,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "send",
       nativeName: "send",
-      description: "Set send policy.",
+      description: "Definir política de envio.",
       textAlias: "/send",
       category: "management",
       args: [
@@ -535,7 +536,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "reset",
       nativeName: "reset",
-      description: "Reset the current session.",
+      description: "Redefinir a sessão atual.",
       textAlias: "/reset",
       acceptsArgs: true,
       category: "session",
@@ -543,7 +544,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "new",
       nativeName: "new",
-      description: "Start a new session.",
+      description: "SIniciar uma nova sessão.",
       textAlias: "/new",
       acceptsArgs: true,
       category: "session",
@@ -551,7 +552,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "compact",
       nativeName: "compact",
-      description: "Compact the session context.",
+      description: "Compactar o contexto da sessão.",
       textAlias: "/compact",
       category: "session",
       args: [
@@ -566,7 +567,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "think",
       nativeName: "think",
-      description: "Set thinking level.",
+      description: "Definir nível de raciocínio.",
       textAlias: "/think",
       category: "options",
       args: [
@@ -582,7 +583,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "verbose",
       nativeName: "verbose",
-      description: "Toggle verbose mode.",
+      description: "Alternar modo detalhado.",
       textAlias: "/verbose",
       category: "options",
       args: [
@@ -598,7 +599,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "reasoning",
       nativeName: "reasoning",
-      description: "Toggle reasoning visibility.",
+      description: "Alternar visibilidade do raciocínio.",
       textAlias: "/reasoning",
       category: "options",
       args: [
@@ -614,7 +615,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "elevated",
       nativeName: "elevated",
-      description: "Toggle elevated mode.",
+      description: "Alternar modo elevado.",
       textAlias: "/elevated",
       category: "options",
       args: [
@@ -630,7 +631,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "exec",
       nativeName: "exec",
-      description: "Set exec defaults for this session.",
+      description: "Definir padrões de execução para esta sessão.",
       textAlias: "/exec",
       category: "options",
       args: [
@@ -664,7 +665,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "model",
       nativeName: "model",
-      description: "Show or set the model.",
+      description: "Mostrar ou definir o modelo.",
       textAlias: "/model",
       category: "options",
       args: [
@@ -678,7 +679,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "models",
       nativeName: "models",
-      description: "List model providers or provider models.",
+      description: "Listar fornecedores de modelos ou modelos de fornecedores.",
       textAlias: "/models",
       argsParsing: "none",
       acceptsArgs: true,
@@ -687,7 +688,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "queue",
       nativeName: "queue",
-      description: "Adjust queue settings.",
+      description: "Ajustar configurações da fila.",
       textAlias: "/queue",
       category: "options",
       args: [
@@ -719,7 +720,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     }),
     defineChatCommand({
       key: "bash",
-      description: "Run host shell commands (host-only).",
+      description: "Executar comandos do shell do host (apenas no host).",
       textAlias: "/bash",
       scope: "text",
       category: "tools",

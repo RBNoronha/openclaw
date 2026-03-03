@@ -1,6 +1,6 @@
 ---
 name: 1password
-description: Set up and use 1Password CLI (op). Use when installing the CLI, enabling desktop app integration, signing in (single or multi-account), or reading/injecting/running secrets via op.
+description: Configure e use a CLI do 1Password (op). Use ao instalar a CLI, habilitar integração com o app desktop, fazer login (conta única ou múltiplas) ou ler/injetar/executar segredos via op.
 homepage: https://developer.1password.com/docs/cli/get-started/
 metadata:
   {

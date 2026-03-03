@@ -1,6 +1,6 @@
 ---
 name: obsidian
-description: Work with Obsidian vaults (plain Markdown notes) and automate via obsidian-cli.
+description: Trabalhe com vaults do Obsidian (notas em Markdown simples) e automatize via obsidian-cli.
 homepage: https://help.obsidian.md
 metadata:
   {
