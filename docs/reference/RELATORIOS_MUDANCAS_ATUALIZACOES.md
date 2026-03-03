@@ -5,6 +5,61 @@
 
 ---
 
+## [2026-03-03] Correção do agente `hitch` — HTTP 404 ao usar `azure-openai/gpt-4o`
+
+### Contexto
+
+O agente `hitch` estava falhando com `HTTP 404: Resource not found` ao tentar usar o modelo primário `azure-openai/gpt-4o`. Todos os testes anteriores resultavam no fallback para `kimi-coding/k2p5`.
+
+### Diagnóstico
+
+**Causa raiz:** O campo `api` do provider `azure-openai` estava configurado como `"openai-responses"`. O tipo `openai-responses` faz a biblioteca `@mariozechner/pi-ai` chamar `{baseUrl}/responses` — endpoint da nova OpenAI Responses API que **não existe no Azure OpenAI v1**, resultando em HTTP 404.
+
+O Azure OpenAI v1 somente suporta o endpoint `/chat/completions`, confirmado via `curl` direto que retornou resposta correta.
+
+Problema adicional: o tipo `openai-completions` usa a variável de ambiente `OPENAI_API_KEY`, mas o config tinha apenas `AZURE_AI_API_KEY`, sem mapear uma para a outra.
+
+### Investigação de código
+
+| Arquivo                                                                 | Descoberta                                                                                                                                              |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node_modules/@mariozechner/pi-ai/dist/providers/register-builtins.js`  | `openai-responses` → `streamOpenAIResponses`; `azure-openai-responses` → `streamAzureOpenAIResponses`; `openai-completions` → `streamOpenAICompletions` |
+| `node_modules/@mariozechner/pi-ai/dist/providers/openai-responses.js`   | Com provider ≠ `openai`, chama `{baseUrl}/responses` via cliente OpenAI SDK                                                                             |
+| `node_modules/@mariozechner/pi-ai/dist/providers/openai-completions.js` | Chama `{baseUrl}/chat/completions`; autentica via `OPENAI_API_KEY`                                                                                      |
+| `node_modules/@mariozechner/pi-ai/dist/env-api-keys.js`                 | Mapeamento de providers para env vars: `openai-completions` usa `OPENAI_API_KEY`                                                                        |
+| `src/agents/pi-embedded-runner/model.ts`                                | `api: providerCfg?.api ?? "openai-responses"` — default que causava o problema                                                                          |
+
+### Correções aplicadas
+
+**Ambos os arquivos de configuração foram atualizados** (`/home/codespace/.openclaw/openclaw.json` e `/workspaces/.openclaw/openclaw.json`):
+
+| Campo                               | Antes                | Depois                  |
+| ----------------------------------- | -------------------- | ----------------------- |
+| `models.providers.azure-openai.api` | `"openai-responses"` | `"openai-completions"`  |
+| `env.OPENAI_API_KEY`                | _(ausente)_          | `"${AZURE_AI_API_KEY}"` |
+
+### Validação
+
+```
+pnpm openclaw agent --agent hitch --message "ping"
+→ pong 🏓
+```
+
+O agente respondeu usando `azure-openai/gpt-4o` sem falhar para fallbacks.
+
+### Estado após a correção
+
+| Item                                                   | Status                          |
+| ------------------------------------------------------ | ------------------------------- |
+| Agente `hitch` — modelo primário `azure-openai/gpt-4o` | ✅ funcional                    |
+| Endpoint Azure `…/openai/v1/chat/completions`          | ✅ respondendo                  |
+| `AZURE_AI_API_KEY` configurada no env                  | ✅                              |
+| `OPENAI_API_KEY` mapeada para `${AZURE_AI_API_KEY}`    | ✅                              |
+| Binding schema (campos `content.pattern` inválidos)    | ✅ corrigido em sessão anterior |
+| Docker push para GHCR `ghcr.io/rbnoronha/openclaw`     | ✅ `2026.3.2` + `latest`        |
+
+---
+
 ## [2026-03-03] Correção de falhas na suíte de testes + validação dos 8 agentes via gateway
 
 ### Contexto
