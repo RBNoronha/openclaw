@@ -1,0 +1,12 @@
+{
+  "name": "@openclaw/google-antigravity-auth",
+  "version": "2026.3.2",
+  "private": true,
+  "description": "OpenClaw Google Antigravity OAuth provider plugin (Gemini 3, Claude, GPT-OSS via Google One)",
+  "type": "module",
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

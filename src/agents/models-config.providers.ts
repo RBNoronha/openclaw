@@ -433,6 +433,17 @@ function resolveApiKeyFromProfiles(params: {
       }
       continue;
     }
+    // For OAuth credentials, return the current access token so it can be used
+    // as the apiKey placeholder in models.json (satisfies pi-coding-agent
+    // validateConfig). Real token refresh is handled by the pi-ai AuthStorage
+    // OAuth mechanism independently of this value.
+    if (cred.type === "oauth") {
+      const access = typeof cred.access === "string" ? cred.access.trim() : "";
+      if (access) {
+        return access;
+      }
+      continue;
+    }
   }
   return undefined;
 }
@@ -1136,7 +1147,46 @@ export async function resolveImplicitProviders(params: {
     providers.kilocode = { ...buildKilocodeProvider(), apiKey: kilocodeKey };
   }
 
+  // google-antigravity: inject gemini-3.1-pro-preview as a custom model when
+  // an OAuth profile exists. The built-in gemini-3-pro-* models are discontinued
+  // by Google in favor of 3.1. The apiKey is the current OAuth access token;
+  // real refresh is handled by pi-ai AuthStorage independently.
+  const antigravityKey = resolveApiKeyFromProfiles({
+    provider: "google-antigravity",
+    store: authStore,
+  });
+  if (antigravityKey && !params.explicitProviders?.["google-antigravity"]) {
+    providers["google-antigravity"] = buildAntigravityCustomModelsProvider(antigravityKey);
+  }
+
   return providers;
+}
+
+const ANTIGRAVITY_BASE_URL = "https://daily-cloudcode-pa.sandbox.googleapis.com";
+
+/**
+ * Builds a provider entry for google-antigravity that adds gemini-3.1-pro-preview
+ * as a custom model (not yet in the pi-ai built-in catalog). The access token
+ * is required by pi-coding-agent validateConfig for custom model entries; the
+ * actual OAuth refresh cycle is handled separately by pi-ai AuthStorage.
+ */
+function buildAntigravityCustomModelsProvider(accessToken: string): ProviderConfig {
+  return {
+    baseUrl: ANTIGRAVITY_BASE_URL,
+    api: "google-gemini-cli" as const,
+    apiKey: accessToken,
+    models: [
+      {
+        id: "gemini-3.1-pro-preview",
+        name: "Gemini 3.1 Pro Preview (Antigravity)",
+        reasoning: true,
+        input: ["text", "image"],
+        cost: { input: 2, output: 12, cacheRead: 0.2, cacheWrite: 2.375 },
+        contextWindow: 1048576,
+        maxTokens: 65535,
+      },
+    ],
+  };
 }
 
 export async function resolveImplicitCopilotProvider(params: {

@@ -1,0 +1,83 @@
+# Dockerfile.deploy — OpenClaw production image with google-antigravity support
+#
+# This Dockerfile builds a ready-to-deploy OpenClaw image that includes:
+#   - google-antigravity-auth extension (OAuth for Gemini 3.1 / Claude via Google One)
+#   - kimi-coding (k2p5) as primary model
+#   - All provider support: anthropic, github-copilot, google, kimi-coding, google-antigravity
+#
+# Usage:
+#   docker build -f Dockerfile.deploy -t openclaw-deploy:2026.3.2 .
+#
+# Run with config volume (recommended):
+#   docker run -d \
+#     -v /path/to/your/.openclaw:/home/node/.openclaw \
+#     -e OPENCLAW_GATEWAY_TOKEN=<your-token> \
+#     -p 18789:18789 \
+#     openclaw-deploy:2026.3.2
+#
+# Or with environment-variable-based bootstrap (first run only):
+#   docker run -d \
+#     -e OPENCLAW_GATEWAY_TOKEN=<token> \
+#     -e KIMI_API_KEY=<key> \
+#     -e ANTHROPIC_TOKEN=<token> \
+#     -e GEMINI_API_KEY=<key> \
+#     -p 18789:18789 \
+#     openclaw-deploy:2026.3.2
+
+FROM node:22-bookworm@sha256:cd7bcd2e7a1e6f72052feb023c7f6b722205d3fcab7bbcbd2d1bfdab10b1e935
+
+LABEL org.opencontainers.image.source="https://github.com/openclaw/openclaw" \
+    org.opencontainers.image.url="https://openclaw.ai" \
+    org.opencontainers.image.documentation="https://docs.openclaw.ai/install/docker" \
+    org.opencontainers.image.licenses="MIT" \
+    org.opencontainers.image.title="OpenClaw Deploy" \
+    org.opencontainers.image.description="OpenClaw gateway with google-antigravity OAuth + kimi-coding support"
+
+# Install Bun (required for build scripts)
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
+
+RUN corepack enable
+
+WORKDIR /app
+RUN chown node:node /app
+
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY --chown=node:node ui/package.json ./ui/package.json
+COPY --chown=node:node patches ./patches
+COPY --chown=node:node scripts ./scripts
+
+USER node
+RUN NODE_OPTIONS=--max-old-space-size=2048 pnpm install --frozen-lockfile
+
+USER node
+COPY --chown=node:node . .
+# Fix permissions on extension/agent directories
+RUN for dir in /app/extensions /app/.agent /app/.agents; do \
+    if [ -d "$dir" ]; then \
+    find "$dir" -type d -exec chmod 755 {} +; \
+    find "$dir" -type f -exec chmod 644 {} +; \
+    fi; \
+    done
+RUN pnpm build
+ENV OPENCLAW_PREFER_PNPM=1
+RUN pnpm ui:build
+
+USER root
+RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
+    && chmod 755 /app/openclaw.mjs
+
+# Bootstrap entrypoint: reads ENV vars and seeds ~/.openclaw/openclaw.json
+# if no config exists yet. Then starts the gateway.
+COPY --chown=node:node scripts/docker-bootstrap.sh /usr/local/bin/docker-bootstrap.sh
+RUN chmod +x /usr/local/bin/docker-bootstrap.sh
+
+ENV NODE_ENV=production
+ENV HOME=/home/node
+
+USER node
+
+HEALTHCHECK --interval=3m --timeout=10s --start-period=30s --retries=3 \
+    CMD node -e "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["/usr/local/bin/docker-bootstrap.sh"]

@@ -52,7 +52,11 @@ export function isModernModelRef(ref: ModelRef): boolean {
     return matchesExactOrPrefix(id, CODEX_MODELS);
   }
 
-  if (provider === "google" || provider === "google-gemini-cli") {
+  if (
+    provider === "google" ||
+    provider === "google-gemini-cli" ||
+    provider === "google-antigravity"
+  ) {
     return matchesPrefix(id, GOOGLE_PREFIXES);
   }
 
