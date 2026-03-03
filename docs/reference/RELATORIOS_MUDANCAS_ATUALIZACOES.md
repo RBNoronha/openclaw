@@ -5,6 +5,71 @@
 
 ---
 
+## [2026-03-03] Correção de falhas na suíte de testes + validação dos 8 agentes via gateway
+
+### Contexto
+
+Sessão de manutenção focada em: (1) corrigir 28 falhas de teste causadas por ACL world-writable em `/tmp` no Codespace, (2) verificar 8 agentes do time, (3) corrigir IDs de modelos desatualizados no `openclaw.json`.
+
+### Falhas de Teste Corrigidas
+
+**Problema raiz:** O `/tmp` no Codespace tem ACL POSIX `1757` (sticky + world-writable), que aplica bit `o+w` a todos os novos diretórios criados — conflitando com o security check de `discovery.ts` que bloqueia paths com bit `0o002`.
+
+**Solução (`test/setup.ts`):** Monkey-patch nas funções de criação de arquivos/diretórios (`fs.mkdirSync`, `fs.writeFileSync`, `fs.promises.mkdir`, `fs.promises.writeFile`). Após cada criação, remove apenas o bit `o+w` (`mode & ~0o002`) sem alterar outros bits — preservando permissões como `0o600` usadas pelos testes de sessão.
+
+**Testes corrigidos:**
+
+| Arquivo                                       | Falhas corrigidas                                |
+| --------------------------------------------- | ------------------------------------------------ |
+| `src/plugin-sdk/loader/discovery.test.ts`     | 11                                               |
+| `src/plugin-sdk/loader/loader.test.ts`        | 25                                               |
+| `src/config/config.plugin-validation.test.ts` | 2 (incl. stale ref. a `google-antigravity-auth`) |
+
+**Teste stale (`config.plugin-validation.test.ts`):** O plugin `google-antigravity-auth` foi re-adicionado como extensão real no commit `e65057ef9`, mas o teste ainda referenciava seu ID como entrada de `LEGACY_REMOVED_PLUGIN_IDS`. Solução: export do Set `LEGACY_REMOVED_PLUGIN_IDS` de `validation.ts` + injeção de ID stub temporário no teste.
+
+### Resultado Final dos Testes
+
+| Métrica       | Valor                                        |
+| ------------- | -------------------------------------------- |
+| Tests passed  | 5892                                         |
+| Tests failed  | 0                                            |
+| Tests skipped | 2 (1 intencional: `gateway.sigterm.test.ts`) |
+| Test files    | 736/737 passed                               |
+
+### Commits
+
+| Hash        | Mensagem                                                                         |
+| ----------- | -------------------------------------------------------------------------------- |
+| `f7fe5a511` | `fix(tests): resolve world-writable /tmp ACL failures and stale validation test` |
+| `cbfe3165d` | `fix(tests): use precise world-write removal instead of fixed chmod`             |
+
+### Validação dos 8 Agentes via Gateway
+
+Gateway rodando: PID 142684, `ws://127.0.0.1:18789`, `gateway.mode: local`.
+
+| Agente           | Status           | Provider/Modelo usado                       |
+| ---------------- | ---------------- | ------------------------------------------- |
+| `orquestrador`   | ✅ OK            | kimi-coding/k2p5 (primário, ~120s)          |
+| `coder`          | ✅ OK            | kimi-coding/k2p5 (fallback)                 |
+| `researcher`     | ✅ OK            | kimi-coding/k2p5 (fallback)                 |
+| `reviewer`       | ✅ OK            | github-copilot/claude-sonnet-4.6 (fallback) |
+| `tester`         | ✅ OK            | fallback disponível                         |
+| `copywriter`     | ✅ OK            | azure-foundry/DeepSeek-V3.2-Speciale        |
+| `designer`       | ✅ OK (após fix) | google/gemini-2.5-pro                       |
+| `social-monitor` | ✅ OK            | azure-foundry/grok-4-fast-reasoning         |
+
+### Correções de Config (`/home/codespace/.openclaw/openclaw.json`)
+
+- **IDs de modelo corrigidos:** `google/gemini-2.5-pro-preview` → `google/gemini-2.5-pro` e `google/gemini-2.5-flash-preview` → `google/gemini-2.5-flash` (afetou agentes `gemini`, `researcher`, `designer`).
+- **Designer:** adicionado `github-copilot/claude-sonnet-4.6` como fallback final.
+- **azure-openai provider:** removido campo `apiVersion` não reconhecido pelo schema do OpenClaw 2026.3.2 (validação Zod agora strict após commit `3002f13ca`).
+
+### Plugins
+
+12/39 plugins carregados — estado intencional. Os 27 "disabled" são plugins de canal (Discord, Slack, etc.) não configurados pelo operador. Nenhum plugin com erro.
+
+---
+
 ## [2026-03-03] SOUL.md — melhorias com padrões avançados da análise de prompts
 
 ### Contexto
