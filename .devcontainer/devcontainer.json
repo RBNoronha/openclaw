@@ -1,4 +1,5 @@
 {
   "name": "OpenClaw Dev",
-  "postStartCommand": "bash /workspaces/openclaw/scripts/start-gateway.sh"
+  "onCreateCommand": "sudo tee /usr/local/bin/openclaw > /dev/null <<'EOF'\n#!/usr/bin/env bash\nexec node /workspaces/openclaw/scripts/run-node.mjs \"$@\"\nEOF\nsudo chmod +x /usr/local/bin/openclaw",
+  "postStartCommand": "ln -sfn /workspaces/.openclaw ~/.openclaw && sudo tee /usr/local/bin/openclaw > /dev/null <<'EOF'\n#!/usr/bin/env bash\nexec node /workspaces/openclaw/scripts/run-node.mjs \"$@\"\nEOF\nsudo chmod +x /usr/local/bin/openclaw && bash /workspaces/openclaw/scripts/start-gateway.sh"
 }

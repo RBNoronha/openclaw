@@ -39,4 +39,5 @@ for i in $(seq 1 15); do
 done
 
 echo "[openclaw] AVISO: Gateway não respondeu em 15s — verifique $LOG_FILE" >&2
-exit 1
+# Sair com 0 para não bloquear postStartCommand do devcontainer
+exit 0
