@@ -1,0 +1,8 @@
+# Não commitar arquivos de backup brutos (contêm credenciais)
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.zip
+
+# Não commitar snapshots JSON com credenciais
+*.snapshot-*.json
