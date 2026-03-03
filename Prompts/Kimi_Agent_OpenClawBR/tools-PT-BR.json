@@ -12,10 +12,7 @@
             "description": "Texto da mensagem a ser exibida ao usuário"
           },
           "attachments": {
-            "anyOf": [
-              {"type": "string"},
-              {"items": {"type": "string"}, "type": "array"}
-            ],
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
             "description": "(Opcional) Lista de anexos para mostrar ao usuário, pode ser caminhos de arquivos ou URLs"
           }
         },
@@ -36,10 +33,7 @@
             "description": "Texto da pergunta a ser apresentada ao usuário"
           },
           "attachments": {
-            "anyOf": [
-              {"type": "string"},
-              {"items": {"type": "string"}, "type": "array"}
-            ],
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
             "description": "(Opcional) Lista de arquivos relacionados à pergunta ou materiais de referência"
           },
           "suggest_user_takeover": {

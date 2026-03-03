@@ -45,12 +45,7 @@
         },
         "scroll_direction": {
           "type": "string",
-          "enum": [
-            "up",
-            "down",
-            "left",
-            "right"
-          ],
+          "enum": ["up", "down", "left", "right"],
           "description": "The direction to scroll. Required for `scroll`."
         },
         "scroll_amount": {
@@ -96,10 +91,7 @@
           "description": "Tab ID to execute the action on. Must be a tab in the current group. Use tabs_context first if you don't have a valid tab ID."
         }
       },
-      "required": [
-        "action",
-        "tabId"
-      ]
+      "required": ["action", "tabId"]
     }
   },
   {
@@ -117,10 +109,7 @@
           "description": "Tab ID to search in. Must be a tab in the current group. Use tabs_context first if you don't have a valid tab ID."
         }
       },
-      "required": [
-        "query",
-        "tabId"
-      ]
+      "required": ["query", "tabId"]
     }
   },
   {
@@ -134,11 +123,7 @@
           "description": "Element reference ID from the read_page tool (e.g., \"ref_1\", \"ref_2\")"
         },
         "value": {
-          "type": [
-            "string",
-            "boolean",
-            "number"
-          ],
+          "type": ["string", "boolean", "number"],
           "description": "The value to set. For checkboxes use boolean, for selects use option value or text, for other inputs use appropriate string/number"
         },
         "tabId": {
@@ -146,11 +131,7 @@
           "description": "Tab ID to set form value in. Must be a tab in the current group. Use tabs_context first if you don't have a valid tab ID."
         }
       },
-      "required": [
-        "ref",
-        "value",
-        "tabId"
-      ]
+      "required": ["ref", "value", "tabId"]
     }
   },
   {
@@ -164,9 +145,7 @@
           "description": "Tab ID to extract text from. Must be a tab in the current group. Use tabs_context first if you don't have a valid tab ID."
         }
       },
-      "required": [
-        "tabId"
-      ]
+      "required": ["tabId"]
     }
   },
   {
@@ -177,12 +156,7 @@
       "properties": {
         "action": {
           "type": "string",
-          "enum": [
-            "start_recording",
-            "stop_recording",
-            "export",
-            "clear"
-          ],
+          "enum": ["start_recording", "stop_recording", "export", "clear"],
           "description": "Action to perform: 'start_recording' (begin capturing), 'stop_recording' (stop capturing but keep frames), 'export' (generate and export GIF), 'clear' (discard frames)"
         },
         "tabId": {
@@ -235,10 +209,7 @@
           }
         }
       },
-      "required": [
-        "action",
-        "tabId"
-      ]
+      "required": ["action", "tabId"]
     }
   },
   {
@@ -260,11 +231,7 @@
           "description": "Tab ID to execute the code in. Must be a tab in the current group. Use tabs_context first if you don't have a valid tab ID."
         }
       },
-      "required": [
-        "action",
-        "text",
-        "tabId"
-      ]
+      "required": ["action", "text", "tabId"]
     },
     "cache_control": {
       "type": "ephemeral"
@@ -285,10 +252,7 @@
           "description": "Tab ID to navigate. Must be a tab in the current group. Use tabs_context first if you don't have a valid tab ID."
         }
       },
-      "required": [
-        "url",
-        "tabId"
-      ]
+      "required": ["url", "tabId"]
     }
   },
   {
@@ -318,9 +282,7 @@
           "description": "Maximum number of messages to return. Defaults to 100. Increase only if you need more results."
         }
       },
-      "required": [
-        "tabId"
-      ]
+      "required": ["tabId"]
     }
   },
   {
@@ -346,9 +308,7 @@
           "description": "Maximum number of requests to return. Defaults to 100. Increase only if you need more results."
         }
       },
-      "required": [
-        "tabId"
-      ]
+      "required": ["tabId"]
     }
   },
   {
@@ -359,10 +319,7 @@
       "properties": {
         "filter": {
           "type": "string",
-          "enum": [
-            "interactive",
-            "all"
-          ],
+          "enum": ["interactive", "all"],
           "description": "Filter elements: \"interactive\" for buttons/links/inputs only, \"all\" for all elements including non-visible ones (default: all elements)"
         },
         "tabId": {
@@ -378,9 +335,7 @@
           "description": "Reference ID of a parent element to read. Will return the specified element and all its children. Use this to focus on a specific part of the page when output is too large."
         }
       },
-      "required": [
-        "tabId"
-      ]
+      "required": ["tabId"]
     }
   },
   {
@@ -402,11 +357,7 @@
           "description": "Tab ID to get the window for. Must be a tab in the current group. Use tabs_context first if you don't have a valid tab ID."
         }
       },
-      "required": [
-        "width",
-        "height",
-        "tabId"
-      ]
+      "required": ["width", "height", "tabId"]
     }
   },
   {
@@ -459,10 +410,7 @@
           "description": "Ordered list of steps you will follow (e.g., ['Navigate to homepage', 'Search for documentation', 'Extract key information']). Be concise - aim for 3-7 steps."
         }
       },
-      "required": [
-        "domains",
-        "approach"
-      ]
+      "required": ["domains", "approach"]
     }
   },
   {
@@ -495,10 +443,7 @@
           "description": "Optional filename for the uploaded file (default: \"image.png\")"
         }
       },
-      "required": [
-        "imageId",
-        "tabId"
-      ]
+      "required": ["imageId", "tabId"]
     }
   }
 ]

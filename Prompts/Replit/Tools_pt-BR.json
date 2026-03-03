@@ -10,9 +10,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "type": "object"
       }
     },
@@ -76,10 +74,7 @@
           },
           "install_or_uninstall": {
             "description": "Whether to install or uninstall.",
-            "enum": [
-              "install",
-              "uninstall"
-            ],
+            "enum": ["install", "uninstall"],
             "type": "string"
           },
           "language_or_system": {
@@ -87,10 +82,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "install_or_uninstall",
-          "language_or_system"
-        ],
+        "required": ["install_or_uninstall", "language_or_system"],
         "type": "object"
       }
     },
@@ -107,9 +99,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "programming_languages"
-        ],
+        "required": ["programming_languages"],
         "type": "object"
       }
     },
@@ -136,13 +126,7 @@
         "properties": {
           "command": {
             "description": "The commands to run. Allowed options are: `view`, `create`, `str_replace`, `insert`, `undo_edit`.",
-            "enum": [
-              "view",
-              "create",
-              "str_replace",
-              "insert",
-              "undo_edit"
-            ],
+            "enum": ["view", "create", "str_replace", "insert", "undo_edit"],
             "type": "string"
           },
           "file_text": {
@@ -173,10 +157,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "command",
-          "path"
-        ],
+        "required": ["command", "path"],
         "type": "object"
       }
     },
@@ -223,10 +204,7 @@
             "description": "If the command starts a process that listens on a port, specify the port number here.\nThis allows the system to wait for the port to be ready before considering the command fully started."
           }
         },
-        "required": [
-          "name",
-          "command"
-        ],
+        "required": ["name", "command"],
         "type": "object"
       }
     },
@@ -240,9 +218,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "type": "object"
       }
     },
@@ -256,9 +232,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "sql_query"
-        ],
+        "required": ["sql_query"],
         "type": "object"
       }
     },
@@ -281,9 +255,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "summary"
-        ],
+        "required": ["summary"],
         "type": "object"
       }
     },
@@ -313,10 +285,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "query",
-          "workflow_name"
-        ],
+        "required": ["query", "workflow_name"],
         "type": "object"
       }
     },
@@ -338,11 +307,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "query",
-          "shell_command",
-          "workflow_name"
-        ],
+        "required": ["query", "shell_command", "workflow_name"],
         "type": "object"
       }
     },
@@ -364,11 +329,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "query",
-          "vnc_execution_command",
-          "workflow_name"
-        ],
+        "required": ["query", "vnc_execution_command", "workflow_name"],
         "type": "object"
       }
     },
@@ -389,10 +350,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "secret_keys",
-          "user_message"
-        ],
+        "required": ["secret_keys", "user_message"],
         "type": "object"
       }
     },
@@ -409,9 +367,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "secret_keys"
-        ],
+        "required": ["secret_keys"],
         "type": "object"
       }
     }

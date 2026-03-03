@@ -12,10 +12,7 @@
             "description": "Message text to display to user"
           },
           "attachments": {
-            "anyOf": [
-              {"type": "string"},
-              {"items": {"type": "string"}, "type": "array"}
-            ],
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
             "description": "(Optional) List of attachments to show to user, can be file paths or URLs"
           }
         },
@@ -36,10 +33,7 @@
             "description": "Question text to present to user"
           },
           "attachments": {
-            "anyOf": [
-              {"type": "string"},
-              {"items": {"type": "string"}, "type": "array"}
-            ],
+            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
             "description": "(Optional) List of question-related files or reference materials"
           },
           "suggest_user_takeover": {

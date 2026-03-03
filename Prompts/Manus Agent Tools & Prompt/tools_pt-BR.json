@@ -26,9 +26,7 @@
             "description": "(Optional) List of attachments to show to user, can be file paths or URLs"
           }
         },
-        "required": [
-          "text"
-        ]
+        "required": ["text"]
       }
     }
   },
@@ -60,16 +58,11 @@
           },
           "suggest_user_takeover": {
             "type": "string",
-            "enum": [
-              "none",
-              "browser"
-            ],
+            "enum": ["none", "browser"],
             "description": "(Optional) Suggested operation for user takeover"
           }
         },
-        "required": [
-          "text"
-        ]
+        "required": ["text"]
       }
     }
   },
@@ -98,9 +91,7 @@
             "description": "(Optional) Whether to use sudo privileges"
           }
         },
-        "required": [
-          "file"
-        ]
+        "required": ["file"]
       }
     }
   },
@@ -137,10 +128,7 @@
             "description": "(Optional) Whether to use sudo privileges"
           }
         },
-        "required": [
-          "file",
-          "content"
-        ]
+        "required": ["file", "content"]
       }
     }
   },
@@ -169,11 +157,7 @@
             "description": "(Optional) Whether to use sudo privileges"
           }
         },
-        "required": [
-          "file",
-          "old_str",
-          "new_str"
-        ]
+        "required": ["file", "old_str", "new_str"]
       }
     }
   },
@@ -198,10 +182,7 @@
             "description": "(Optional) Whether to use sudo privileges"
           }
         },
-        "required": [
-          "file",
-          "regex"
-        ]
+        "required": ["file", "regex"]
       }
     }
   },
@@ -222,10 +203,7 @@
             "description": "Filename pattern using glob syntax wildcards"
           }
         },
-        "required": [
-          "path",
-          "glob"
-        ]
+        "required": ["path", "glob"]
       }
     }
   },
@@ -250,11 +228,7 @@
             "description": "Shell command to execute"
           }
         },
-        "required": [
-          "id",
-          "exec_dir",
-          "command"
-        ]
+        "required": ["id", "exec_dir", "command"]
       }
     }
   },
@@ -271,9 +245,7 @@
             "description": "Unique identifier of the target shell session"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -294,9 +266,7 @@
             "description": "Wait duration in seconds"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -321,11 +291,7 @@
             "description": "Whether to press Enter key after input"
           }
         },
-        "required": [
-          "id",
-          "input",
-          "press_enter"
-        ]
+        "required": ["id", "input", "press_enter"]
       }
     }
   },
@@ -342,9 +308,7 @@
             "description": "Unique identifier of the target shell session"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -371,9 +335,7 @@
             "description": "Complete URL to visit. Must include protocol prefix."
           }
         },
-        "required": [
-          "url"
-        ]
+        "required": ["url"]
       }
     }
   },
@@ -390,9 +352,7 @@
             "description": "Complete URL to visit after restart. Must include protocol prefix."
           }
         },
-        "required": [
-          "url"
-        ]
+        "required": ["url"]
       }
     }
   },
@@ -449,10 +409,7 @@
             "description": "Whether to press Enter key after input"
           }
         },
-        "required": [
-          "text",
-          "press_enter"
-        ]
+        "required": ["text", "press_enter"]
       }
     }
   },
@@ -473,10 +430,7 @@
             "description": "Y coordinate of target cursor position"
           }
         },
-        "required": [
-          "coordinate_x",
-          "coordinate_y"
-        ]
+        "required": ["coordinate_x", "coordinate_y"]
       }
     }
   },
@@ -493,9 +447,7 @@
             "description": "Key name to simulate (e.g., Enter, Tab, ArrowUp), supports key combinations (e.g., Control+Enter)."
           }
         },
-        "required": [
-          "key"
-        ]
+        "required": ["key"]
       }
     }
   },
@@ -516,10 +468,7 @@
             "description": "Option number to select, starting from 0."
           }
         },
-        "required": [
-          "index",
-          "option"
-        ]
+        "required": ["index", "option"]
       }
     }
   },
@@ -568,9 +517,7 @@
             "description": "JavaScript code to execute. Note that the runtime environment is browser console."
           }
         },
-        "required": [
-          "javascript"
-        ]
+        "required": ["javascript"]
       }
     }
   },
@@ -604,20 +551,11 @@
           },
           "date_range": {
             "type": "string",
-            "enum": [
-              "all",
-              "past_hour",
-              "past_day",
-              "past_week",
-              "past_month",
-              "past_year"
-            ],
+            "enum": ["all", "past_hour", "past_day", "past_week", "past_month", "past_year"],
             "description": "(Optional) Time range filter for search results."
           }
         },
-        "required": [
-          "query"
-        ]
+        "required": ["query"]
       }
     }
   },
@@ -634,9 +572,7 @@
             "description": "Local port number to expose"
           }
         },
-        "required": [
-          "port"
-        ]
+        "required": ["port"]
       }
     }
   },
@@ -650,10 +586,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": [
-              "static",
-              "nextjs"
-            ],
+            "enum": ["static", "nextjs"],
             "description": "Type of website or application to deploy."
           },
           "local_dir": {
@@ -661,10 +594,7 @@
             "description": "Absolute path of local directory to deploy."
           }
         },
-        "required": [
-          "type",
-          "local_dir"
-        ]
+        "required": ["type", "local_dir"]
       }
     }
   },
@@ -681,9 +611,7 @@
             "description": "Absolute path of the source MDX file"
           }
         },
-        "required": [
-          "mdx_file_path"
-        ]
+        "required": ["mdx_file_path"]
       }
     }
   },

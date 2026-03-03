@@ -8,9 +8,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "package"
-      ],
+      "required": ["package"],
       "type": "object"
     }
   },
@@ -35,10 +33,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "query",
-        "include_pattern"
-      ],
+      "required": ["query", "include_pattern"],
       "type": "object"
     }
   },
@@ -55,10 +50,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "file_path",
-        "content"
-      ],
+      "required": ["file_path", "content"],
       "type": "object"
     }
   },
@@ -91,13 +83,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "file_path",
-        "search",
-        "first_replaced_line",
-        "last_replaced_line",
-        "replace"
-      ],
+      "required": ["file_path", "search", "first_replaced_line", "last_replaced_line", "replace"],
       "type": "object"
     }
   },
@@ -116,10 +102,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "source_url",
-        "target_path"
-      ],
+      "required": ["source_url", "target_path"],
       "type": "object"
     }
   },
@@ -137,9 +120,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "url"
-      ],
+      "required": ["url"],
       "type": "object"
     }
   },
@@ -156,10 +137,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "source_file_path",
-        "destination_file_path"
-      ],
+      "required": ["source_file_path", "destination_file_path"],
       "type": "object"
     }
   },
@@ -176,9 +154,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "file_path"
-      ],
+      "required": ["file_path"],
       "type": "object"
     }
   },
@@ -191,9 +167,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "search"
-      ],
+      "required": ["search"],
       "type": "object"
     }
   },
@@ -206,9 +180,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "search"
-      ],
+      "required": ["search"],
       "type": "object"
     }
   },
@@ -221,9 +193,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "package"
-      ],
+      "required": ["package"],
       "type": "object"
     }
   },
@@ -240,10 +210,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "original_file_path",
-        "new_file_path"
-      ],
+      "required": ["original_file_path", "new_file_path"],
       "type": "object"
     }
   },
@@ -256,9 +223,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "file_path"
-      ],
+      "required": ["file_path"],
       "type": "object"
     }
   },
@@ -271,9 +236,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "secret_name"
-      ],
+      "required": ["secret_name"],
       "type": "object"
     }
   },
@@ -286,9 +249,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "secret_name"
-      ],
+      "required": ["secret_name"],
       "type": "object"
     }
   },
@@ -305,9 +266,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "query"
-      ],
+      "required": ["query"],
       "type": "object"
     }
   },
@@ -320,9 +279,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "slug"
-      ],
+      "required": ["slug"],
       "type": "object"
     }
   },
@@ -335,9 +292,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "file_path"
-      ],
+      "required": ["file_path"],
       "type": "object"
     }
   },
@@ -366,10 +321,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "prompt",
-        "target_path"
-      ],
+      "required": ["prompt", "target_path"],
       "type": "object"
     }
   },
@@ -393,11 +345,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "image_paths",
-        "prompt",
-        "target_path"
-      ],
+      "required": ["image_paths", "prompt", "target_path"],
       "type": "object"
     }
   },
@@ -426,9 +374,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "query"
-      ],
+      "required": ["query"],
       "type": "object"
     }
   },
@@ -446,11 +392,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "startdate",
-        "enddate",
-        "granularity"
-      ],
+      "required": ["startdate", "enddate", "granularity"],
       "type": "object"
     }
   },
@@ -478,9 +420,7 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "force"
-      ],
+      "required": ["force"],
       "type": "object"
     }
   },

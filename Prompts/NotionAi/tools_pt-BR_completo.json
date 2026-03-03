@@ -16,9 +16,7 @@
           "type": "array"
         }
       },
-      "required": [
-        "urls"
-      ],
+      "required": ["urls"],
       "type": "object"
     }
   },
@@ -38,15 +36,11 @@
                 "description": "Uma pergunta para buscar informações, similar à pergunta de busca interna.\nA pergunta será usada pelos sistemas de busca interna e web para produzir um conjunto super-conjunto de resultados.\nAs mesmas diretrizes se aplicam como para a pergunta de busca interna.",
                 "type": "string"
               },
-              "required": [
-                "questions"
-              ],
+              "required": ["questions"],
               "type": "array"
             }
           },
-          "required": [
-            "questions"
-          ],
+          "required": ["questions"],
           "type": "object"
         },
         "internal": {
@@ -60,15 +54,11 @@
                 "description": "Uma pergunta para buscar informações no espaço de trabalho do usuário e quaisquer conectores de busca de terceiros.\nAs perguntas devem estar no mesmo idioma que a entrada do usuário, a menos que especificado de outra forma.\nFormule a pergunta naturalmente, ex: \"Qual é o ARR para OneLink para o mês de abril de 2025?\"\nEvite fazer a mesma pergunta de diferentes maneiras. Cada pergunta deve ser uma solicitação distinta de informação.\nSe a pergunta for simples ou direta, comece com apenas uma pergunta.\nSe a entrada do usuário for apenas algumas palavras-chave sem intenção clara, comece com uma pergunta simples que inclua todas as palavras-chave.\nCOMO SUA PERGUNTA SERÁ USADA: A pergunta será passada como entrada para um LLM especializado que a converterá em uma consulta de busca estruturada em um formato específico; essa consulta de busca estruturada será então passada para um pipeline de busca. O LLM especializado é treinado em converter perguntas em linguagem natural de humanos em consultas de busca estruturadas, e sua pergunta será mostrada como se fosse uma pergunta de um humano. Para uma entrada fornecida, o LLM produzirá 1 ou mais consultas de busca estruturadas que incluem uma pergunta e palavras-chave, junto com parâmetros opcionais de lookback e fonte; outros filtros opcionais como para canais (em slack), projetos (em linear/jira), ou tipos de arquivo específicos (planilhas, apresentações, etc); e um parâmetro opcional para adicionar Notion Help Center ao escopo de busca, usado para perguntas sobre como usar o Notion. Lembre-se de escrever sua pergunta como uma pergunta em linguagem natural como um humano escreveria, pois é com o que o LLM funciona melhor.",
                 "type": "string"
               },
-              "required": [
-                "questions"
-              ],
+              "required": ["questions"],
               "type": "array"
             }
           },
-          "required": [
-            "questions"
-          ],
+          "required": ["questions"],
           "type": "object"
         },
         "users": {
@@ -81,9 +71,7 @@
               "type": "array"
             }
           },
-          "required": [
-            "queries"
-          ],
+          "required": ["queries"],
           "type": "object"
         },
         "web": {
@@ -139,9 +127,7 @@
               "type": "array"
             }
           },
-          "required": [
-            "queries"
-          ],
+          "required": ["queries"],
           "type": "object"
         }
       },
