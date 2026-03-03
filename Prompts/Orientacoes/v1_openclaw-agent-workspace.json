@@ -1,0 +1,13 @@
+{
+  "id": "workspace-assistant",
+  "model": "gemini-3.1-pro",
+  "workspace": "~/.openclaw/workspace-corporate",
+  "system_prompt_patterns": [
+    "silent_thinking_planning",
+    "workspace_first_search",
+    "concurrent_tool_calls",
+    "anti_distillation_protection"
+  ],
+  "tools": ["google_search", "google_browse", "image_gen", "video_gen"],
+  "role": "Agente corporativo com prioridade ao corpus do usuário e planejamento silencioso"
+}

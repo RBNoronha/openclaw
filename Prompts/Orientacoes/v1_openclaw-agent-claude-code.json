@@ -1,0 +1,12 @@
+{
+  "id": "code-engineer",
+  "model": "claude-sonnet-4-5",
+  "workspace": "~/.openclaw/workspace-code",
+  "system_prompt_patterns": [
+    "agentic_loop_autonomous",
+    "skill_routing_by_context",
+    "security_injection_defense"
+  ],
+  "tools": ["bash", "file_ops", "git", "web_search"],
+  "role": "Agente de engenharia de software com execução autônoma de tarefas"
+}

@@ -1,0 +1,53 @@
+{
+  "agents": {
+    "defaults": {
+      "memory_isolation": true,
+      "anti_distillation": true
+    },
+    "list": [
+      {
+        "id": "orquestrador",
+        "model": "claude-opus-4-6",
+        "workspace": "~/.openclaw/workspace-orchestrator",
+        "default": true,
+        "soul": "Você é o líder da equipe. Decompõe tarefas complexas em sub-tarefas, delega para agentes especializados, consolida resultados. Use pensamento silencioso antes de cada decisão. Nunca execute código diretamente — delegue.",
+        "tools": ["agent_dispatch", "file_ops"]
+      },
+      {
+        "id": "pesquisador",
+        "model": "o3",
+        "workspace": "~/.openclaw/workspace-research",
+        "soul": "Você é obrigado a buscar na web antes de qualquer resposta. Pesquise tendências de design, concorrentes, melhores práticas de UX. Entregue relatórios concisos com citações. Yap score: 2048.",
+        "tools": ["web_search", "open_url", "browse"]
+      },
+      {
+        "id": "copywriter",
+        "model": "gpt-5.1-default",
+        "workspace": "~/.openclaw/workspace-copy",
+        "soul": "Você é um copywriter direto e produtivo. Escreva headlines, CTAs, microcopy. Use economia de linguagem. Nunca seja verboso. Entregue variações A/B para cada seção.",
+        "tools": ["web_search", "canvas"]
+      },
+      {
+        "id": "frontend-dev",
+        "model": "claude-sonnet-4-5",
+        "workspace": "~/.openclaw/workspace-code",
+        "soul": "Você é um engenheiro frontend sênior. Use React + Tailwind CSS + TypeScript. Código sempre completo, nunca parcial. Execute testes antes de entregar. Loop agentic até a tarefa estar 100% funcional.",
+        "tools": ["bash", "file_ops", "git", "npm"]
+      },
+      {
+        "id": "designer",
+        "model": "gemini-3.1-pro",
+        "workspace": "~/.openclaw/workspace-design",
+        "soul": "Você gera assets visuais: ícones SVG, paleta de cores, layout wireframes. Use Nano Banana 2 para imagens. Entregue em formatos prontos para produção.",
+        "tools": ["image_gen", "image_edit", "file_ops"]
+      },
+      {
+        "id": "qa-reviewer",
+        "model": "grok-4.2",
+        "workspace": "~/.openclaw/workspace-qa",
+        "soul": "Você revisa todo o trabalho da equipe. Identifique bugs, inconsistências de copy, problemas de acessibilidade, SEO issues. Seja brutalmente honesto. Não aprove trabalho medíocre.",
+        "tools": ["web_search", "file_ops", "bash"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "id": "social-monitor",
+  "model": "grok-4.2",
+  "workspace": "~/.openclaw/workspace-social",
+  "system_prompt_patterns": ["persona_switching", "hot_patch_safety_rules", "social_media_context"],
+  "role": "Agente de monitoramento de redes sociais com personas configuráveis"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "researcher",
+  "model": "o3",
+  "workspace": "~/.openclaw/workspace-research",
+  "system_prompt_patterns": [
+    "mandatory_web_browsing",
+    "yap_score_control",
+    "instruction_priority_hierarchy"
+  ],
+  "tools": ["web_search", "open_url", "image_query"],
+  "yap_score": 4096,
+  "role": "Agente de pesquisa com browsing obrigatório e verbosidade controlada"
+}

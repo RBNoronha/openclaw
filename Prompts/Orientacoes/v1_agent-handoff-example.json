@@ -1,0 +1,14 @@
+{
+  "from": "pesquisador",
+  "to": "copywriter",
+  "type": "task_handoff",
+  "payload": {
+    "research_report": "/shared/research/competitors-analysis.md",
+    "key_findings": [
+      "PMEs preferem dashboards simples",
+      "Concorrentes usam hero sections com calculadoras interativas",
+      "CTAs mais eficazes: 'Comece grátis' > 'Saiba mais'"
+    ],
+    "instruction": "Use estes insights para criar o copy da landing page"
+  }
+}

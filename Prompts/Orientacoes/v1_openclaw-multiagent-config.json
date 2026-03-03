@@ -1,0 +1,61 @@
+{
+  "agents": {
+    "defaults": {
+      "workspace": "~/.openclaw/workspace",
+      "memory_isolation": true,
+      "anti_distillation": true
+    },
+    "list": [
+      {
+        "id": "orchestrator",
+        "model": "claude-opus-4-6",
+        "default": true,
+        "patterns": ["silent_thinking", "instruction_priority_hierarchy"],
+        "role": "Roteador principal e delegador de sub-tarefas"
+      },
+      {
+        "id": "code-engineer",
+        "model": "claude-sonnet-4-5",
+        "workspace": "~/.openclaw/workspace-code",
+        "patterns": ["agentic_loop", "skill_routing", "security_injection_defense"],
+        "tools": ["bash", "file_ops", "git"]
+      },
+      {
+        "id": "researcher",
+        "model": "o3",
+        "workspace": "~/.openclaw/workspace-research",
+        "patterns": ["mandatory_browsing", "yap_score:4096", "citation_required"],
+        "tools": ["web_search", "open_url", "browse"]
+      },
+      {
+        "id": "workspace-analyst",
+        "model": "gemini-3.1-pro",
+        "workspace": "~/.openclaw/workspace-corporate",
+        "patterns": ["workspace_first", "concurrent_tools", "silent_thinking"],
+        "tools": ["google_search", "google_drive", "image_gen"]
+      },
+      {
+        "id": "writer",
+        "model": "gpt-5.1-default",
+        "workspace": "~/.openclaw/workspace-writing",
+        "patterns": ["hermes_highlights", "economy_of_language", "factcheck"],
+        "tools": ["web_search", "canvas"]
+      },
+      {
+        "id": "social-monitor",
+        "model": "grok-4.2",
+        "workspace": "~/.openclaw/workspace-social",
+        "patterns": ["persona_switching", "realtime_search"],
+        "tools": ["x_search", "web_search"]
+      }
+    ]
+  },
+  "bindings": [
+    { "match": { "channel": "slack", "accountId": "work-slack" }, "agent": "workspace-analyst" },
+    { "match": { "channel": "terminal" }, "agent": "code-engineer" },
+    { "match": { "channel": "whatsapp", "accountId": "personal" }, "agent": "orchestrator" },
+    { "match": { "channel": "discord", "accountId": "research-server" }, "agent": "researcher" },
+    { "match": { "intent": "write_document" }, "agent": "writer" },
+    { "match": { "intent": "social_media" }, "agent": "social-monitor" }
+  ]
+}
