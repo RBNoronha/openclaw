@@ -5,6 +5,37 @@
 
 ---
 
+## [2026-03-03] Rebuild e push de imagens Docker para ACR e Docker Hub
+
+### Contexto
+
+Após as mudanças de i18n (tradução de skills e comandos) e a criação da feature `auto-translate`, as imagens Docker foram reconstruídas e publicadas nos dois registries para refletir o estado atualizado do repositório.
+
+### Imagens Buildadas
+
+| Tag        | Digest (Docker Hub)                                                       | Criação (UTC)       |
+| ---------- | ------------------------------------------------------------------------- | ------------------- |
+| `2026.3.2` | `sha256:a59c5008cfb5d03e879c1a55335627d0c4afbd2d85f7ae8a313ea634f4b6c3d6` | 2026-03-03 04:27:17 |
+| `latest`   | `sha256:a59c5008cfb5d03e879c1a55335627d0c4afbd2d85f7ae8a313ea634f4b6c3d6` | 2026-03-03 04:27:17 |
+
+### Registries Atualizados
+
+| Registry                                  | Tags pushadas        | Status |
+| ----------------------------------------- | -------------------- | ------ |
+| `acrtemplateopenclaw.azurecr.io/openclaw` | `2026.3.2`, `latest` | ✅     |
+| `renanbesserra/openclaw` (Docker Hub)     | `2026.3.2`, `latest` | ✅     |
+
+### Mudanças incluídas nesta imagem vs. anterior
+
+- 43 `skills/*/SKILL.md` com `description` traduzida para PT-BR
+- `src/auto-reply/commands-registry.data.ts` — 35 descrições de comandos em PT-BR
+- `src/agents/skills/auto-translate.ts` — novo módulo de auto-tradução de skills
+- `src/agents/skills/refresh.ts` — integração auto-translate no watcher
+- `src/config/types.skills.ts` — tipo `SkillsAutoTranslateConfig`
+- `dist/` reconstruído pela `pnpm build` (build limpo, sem erros)
+
+---
+
 ## [2026-03-03] Tradução de descriptions dos comandos de barra para PT-BR
 
 **Arquivo:** `src/auto-reply/commands-registry.data.ts`
