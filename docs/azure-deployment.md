@@ -1,13 +1,21 @@
 # Azure Container Apps Deployment
 
-Este documento descreve como configurar o deploy automático do OpenClaw no Azure Container Apps.
+Este documento descreve como configurar o deploy automático do **OpenClaw oficial** no Azure Container Apps, usando a imagem pré-construída do GitHub Container Registry (GHCR).
+
+## Como funciona
+
+O workflow usa a imagem oficial do OpenClaw:
+- **Registry**: `ghcr.io/openclaw/openclaw`
+- **Tags**: Última release (`v2026.3.7`) ou `main` para a versão mais recente
+- **A2A Protocol**: Já incluído na imagem oficial
+
+Não é necessário fazer build local - o workflow baixa a imagem oficial e deploya no Azure Container Apps.
 
 ## Pré-requisitos
 
 1. Azure subscription ativa
-2. Azure Container Registry (ACR) criado
-3. Azure Container App criado
-4. Managed Identity configurada com permissões no ACR e Container App
+2. Azure Container App criado (pode usar GHCR diretamente ou ACR como mirror)
+3. Managed Identity configurada com permissões no Container App
 
 ## Configuração de Secrets no GitHub
 
@@ -20,7 +28,7 @@ Adicione os seguintes secrets no repositório (Settings > Secrets and variables 
 | `AZURE_SUBSCRIPTION_ID` | Azure Subscription ID | `12345678-1234-1234-1234-123456789012` |
 | `AZURE_RESOURCE_GROUP` | Nome do Resource Group | `rg-openclaw-prod` |
 | `AZURE_CONTAINER_APP_NAME` | Nome do Container App | `openclaw-prod` |
-| `AZURE_ACR_NAME` | Nome do Azure Container Registry | `openclawacr` |
+| `AZURE_ACR_NAME` | (Opcional) Nome do ACR se usar mirror | `openclawacr` |
 
 ## Setup do Azure (passo a passo)
 

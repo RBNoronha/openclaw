@@ -16,71 +16,25 @@ on:
         options:
           - production
           - staging
+      image_tag:
+        description: 'Image tag to deploy (default: latest from GHCR)'
+        required: false
+        default: 'main'
+        type: string
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  # Azure configuration - update these values
+  # Use official OpenClaw image from GHCR
+  OPENCLAW_REGISTRY: ghcr.io
+  OPENCLAW_IMAGE: openclaw/openclaw
+  # Azure configuration
   AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
   AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
   AZURE_ACR_NAME: ${{ secrets.AZURE_ACR_NAME }}
 
 jobs:
-  # Build and push to ACR
-  build-and-push:
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-      id-token: write
-    outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
-      image-digest: ${{ steps.build.outputs.digest }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Login to Azure Container Registry
-        run: |
-          az acr login --name ${{ env.AZURE_ACR_NAME }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.AZURE_ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=sha,prefix=,suffix=,format=short
-
-      - name: Build and push to ACR
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64
-          labels: ${{ steps.meta.outputs.labels }}
-          tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          provenance: false
-          push: true
-
-  # Deploy to Azure Container Apps
+  # Deploy to Azure Container Apps using official OpenClaw image
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-push
     permissions:
       id-token: write
       contents: read
@@ -91,13 +45,34 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get latest OpenClaw image tag
+        id: get-tag
+        run: |
+          if [ "${{ github.event.inputs.image_tag }}" != "" ] && [ "${{ github.event.inputs.image_tag }}" != "main" ]; then
+            echo "Using manual tag: ${{ github.event.inputs.image_tag }}"
+            echo "tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_type }}" == "tag" ]; then
+            echo "Using git tag: ${{ github.ref_name }}"
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            # Get latest tag from GitHub API
+            LATEST_TAG=$(curl -s "https://api.github.com/repos/openclaw/openclaw/releases/latest" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
+            if [ -z "$LATEST_TAG" ]; then
+              LATEST_TAG="main"
+            fi
+            echo "Using latest release: $LATEST_TAG"
+            echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          fi
 
       - name: Deploy to Container App
         run: |
+          IMAGE="${{ env.OPENCLAW_REGISTRY }}/${{ env.OPENCLAW_IMAGE }}:${{ steps.get-tag.outputs.tag }}"
+          echo "Deploying image: $IMAGE"
           az containerapp update \
             --name ${{ env.AZURE_CONTAINER_APP_NAME }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --image ${{ needs.build-and-push.outputs.image-tag }} \
+            --image "$IMAGE" \
             --output table
 
       - name: Verify deployment
@@ -105,16 +80,16 @@ jobs:
           az containerapp show \
             --name ${{ env.AZURE_CONTAINER_APP_NAME }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --query "{Name:name, Status:properties.runningStatus, URL:properties.configuration.ingress.fqdn}"
+            --query "{Name:name, Status:properties.runningStatus, URL:properties.configuration.ingress.fqdn, Image:properties.template.containers[0].image}"
 
-  # Alternative: Deploy using Azure Container Apps Action (simpler but less control)
-  deploy-action:
+  # Alternative: Copy image from GHCR to ACR (if needed for private ACR)
+  mirror-and-deploy:
     runs-on: ubuntu-latest
-    needs: build-and-push
     permissions:
       id-token: write
       contents: read
-    if: false  # Set to true to use this method instead
+      packages: read
+    if: false  # Set to true to use ACR mirror instead of direct GHCR pull
     steps:
       - name: Azure Login
         uses: azure/login@v2
@@ -123,10 +98,46 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Azure Container Apps
-        uses: azure/container-apps-deploy-action@v2
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          acrName: ${{ env.AZURE_ACR_NAME }}
-          containerAppName: ${{ env.AZURE_CONTAINER_APP_NAME }}
-          resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
-          imageToDeploy: ${{ needs.build-and-push.outputs.image-tag }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Azure Container Registry
+        run: |
+          az acr login --name ${{ env.AZURE_ACR_NAME }}
+
+      - name: Get latest OpenClaw image tag
+        id: get-tag
+        run: |
+          LATEST_TAG=$(curl -s "https://api.github.com/repos/openclaw/openclaw/releases/latest" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="main"
+          fi
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Mirror image to ACR
+        run: |
+          SOURCE="${{ env.OPENCLAW_REGISTRY }}/${{ env.OPENCLAW_IMAGE }}:${{ steps.get-tag.outputs.tag }}"
+          DEST="${{ env.AZURE_ACR_NAME }}.azurecr.io/openclaw:${{ steps.get-tag.outputs.tag }}"
+          echo "Mirroring $SOURCE to $DEST"
+          docker pull "$SOURCE"
+          docker tag "$SOURCE" "$DEST"
+          docker push "$DEST"
+
+      - name: Deploy to Container App
+        run: |
+          az containerapp update \
+            --name ${{ env.AZURE_CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --image "${{ env.AZURE_ACR_NAME }}.azurecr.io/openclaw:${{ steps.get-tag.outputs.tag }}" \
+            --output table
+
+      - name: Verify deployment
+        run: |
+          az containerapp show \
+            --name ${{ env.AZURE_CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --query "{Name:name, Status:properties.runningStatus, URL:properties.configuration.ingress.fqdn, Image:properties.template.containers[0].image}"
