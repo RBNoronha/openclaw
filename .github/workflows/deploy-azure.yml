@@ -2,143 +2,131 @@ name: Deploy to Azure Container Apps
 
 on:
   push:
-    branches: [main]
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
-      - "**/*.mdx"
-      - ".agents/**"
+    branches:
+      - main
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
-      target:
-        description: "Which agent to deploy"
-        required: false
-        default: "all"
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'production'
         type: choice
-        options: [all, openclaw-zero-person, openclaw-coder-agent]
-
-concurrency:
-  group: deploy-azure-${{ github.ref }}
-  cancel-in-progress: false
+        options:
+          - production
+          - staging
 
 env:
-  ACR_SERVER: acrtemplateopenclaw.azurecr.io
-  IMAGE_NAME: acrtemplateopenclaw.azurecr.io/openclaw-prod
-  RESOURCE_GROUP: RG-OPENCLAW
-  ACA_ENVIRONMENT: openclaw-aca-env
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  # Azure configuration - update these values
+  AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+  AZURE_CONTAINER_APP_NAME: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
+  AZURE_ACR_NAME: ${{ secrets.AZURE_ACR_NAME }}
 
 jobs:
-  build:
-    name: Build & push image to ACR
-    runs-on: blacksmith-16vcpu-ubuntu-2404
+  # Build and push to ACR
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      id-token: write
     outputs:
-      image-tag: ${{ steps.meta.outputs.tag }}
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set image tag
-        id: meta
-        run: |
-          SHORT_SHA="${GITHUB_SHA::7}"
-          echo "tag=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
-          echo "Image tag: ${SHORT_SHA}"
-
-      - name: Login to ACR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.ACR_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to Azure Container Registry
+        run: |
+          az acr login --name ${{ env.AZURE_ACR_NAME }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.AZURE_ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,prefix=,suffix=,format=short
+
+      - name: Build and push to ACR
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64
-          push: true
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
-            ${{ env.IMAGE_NAME }}:latest
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}-cache:amd64
-          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}-cache:amd64,mode=max
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           provenance: false
+          push: true
 
-  deploy-main-agent:
-    name: Deploy openclaw-zero-person
-    needs: build
+  # Deploy to Azure Container Apps
+  deploy:
     runs-on: ubuntu-latest
-    if: github.event.inputs.target == 'all' || github.event.inputs.target == 'openclaw-zero-person' || github.event.inputs.target == ''
-    environment:
-      name: production
-      url: https://openclaw-zero-person.purplestone-bd490ece.eastus.azurecontainerapps.io
+    needs: build-and-push
+    permissions:
+      id-token: write
+      contents: read
     steps:
-      - name: Azure login
+      - name: Azure Login
         uses: azure/login@v2
         with:
-          creds: >-
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-            }
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to openclaw-zero-person
-        uses: azure/container-apps-deploy-action@v2
-        with:
-          acrName: acrtemplateopenclaw
-          containerAppName: openclaw-zero-person
-          resourceGroup: ${{ env.RESOURCE_GROUP }}
-          imageToDeploy: ${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}
-
-      - name: Verify Agent Card
+      - name: Deploy to Container App
         run: |
-          echo "Aguardando container iniciar..."
-          sleep 15
-          for i in $(seq 1 6); do
-            STATUS=$(curl -sf --max-time 10 \
-              "https://openclaw-zero-person.purplestone-bd490ece.eastus.azurecontainerapps.io/healthz" \
-              -o /dev/null -w "%{http_code}" 2>/dev/null || echo "000")
-            if [[ "$STATUS" == "200" ]]; then
-              echo "Container online (tentativa $i)"
-              break
-            fi
-            echo "Tentativa $i/6 — HTTP $STATUS. Aguardando..."
-            sleep 10
-          done
-          echo "Deploy concluido: https://openclaw-zero-person.purplestone-bd490ece.eastus.azurecontainerapps.io"
-          echo "Agent Card:       https://openclaw-zero-person.purplestone-bd490ece.eastus.azurecontainerapps.io/.well-known/agent.json"
+          az containerapp update \
+            --name ${{ env.AZURE_CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --image ${{ needs.build-and-push.outputs.image-tag }} \
+            --output table
 
-  deploy-coder-agent:
-    name: Deploy openclaw-coder-agent
-    needs: build
+      - name: Verify deployment
+        run: |
+          az containerapp show \
+            --name ${{ env.AZURE_CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --query "{Name:name, Status:properties.runningStatus, URL:properties.configuration.ingress.fqdn}"
+
+  # Alternative: Deploy using Azure Container Apps Action (simpler but less control)
+  deploy-action:
     runs-on: ubuntu-latest
-    if: github.event.inputs.target == 'all' || github.event.inputs.target == 'openclaw-coder-agent' || github.event.inputs.target == ''
+    needs: build-and-push
+    permissions:
+      id-token: write
+      contents: read
+    if: false  # Set to true to use this method instead
     steps:
-      - name: Azure login
+      - name: Azure Login
         uses: azure/login@v2
         with:
-          creds: >-
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-            }
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to openclaw-coder-agent
+      - name: Deploy to Azure Container Apps
         uses: azure/container-apps-deploy-action@v2
         with:
-          acrName: acrtemplateopenclaw
-          containerAppName: openclaw-coder-agent
-          resourceGroup: ${{ env.RESOURCE_GROUP }}
-          imageToDeploy: ${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image-tag }}
-
-      - name: Confirm deploy
-        run: |
-          echo "Coder agent atualizado com nova imagem."
-          echo "Endpoint interno A2A: http://openclaw-coder-agent.internal.purplestone-bd490ece.eastus.azurecontainerapps.io/a2a"
+          acrName: ${{ env.AZURE_ACR_NAME }}
+          containerAppName: ${{ env.AZURE_CONTAINER_APP_NAME }}
+          resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
+          imageToDeploy: ${{ needs.build-and-push.outputs.image-tag }}
