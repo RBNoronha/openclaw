@@ -1,0 +1,136 @@
+name: Deploy to Azure Container Apps (Manual Auth)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      image_tag:
+        description: 'Image tag to deploy (ex: v2026.3.7)'
+        required: false
+        default: 'v2026.3.7'
+        type: string
+      azure_credentials:
+        description: 'Azure CLI credentials (output de az ad sp create-for-rbac)'
+        required: true
+        type: string
+
+env:
+  OPENCLAW_REGISTRY: ghcr.io
+  OPENCLAW_IMAGE: openclaw/openclaw
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login with Credentials
+        run: |
+          echo '${{ github.event.inputs.azure_credentials }}' > azure_credentials.json
+          az login --service-principal \
+            --username $(jq -r .clientId azure_credentials.json) \
+            --password $(jq -r .clientSecret azure_credentials.json) \
+            --tenant $(jq -r .tenantId azure_credentials.json)
+          rm azure_credentials.json
+          
+          # Set subscription
+          az account set --subscription $(jq -r .subscriptionId azure_credentials.json)
+          echo "✅ Logged in to Azure"
+
+      - name: Get image tag
+        id: get-tag
+        run: |
+          TAG="${{ github.event.inputs.image_tag }}"
+          echo "Using tag: $TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Deploy to Container App
+        run: |
+          # Parse credentials para obter subscription
+          SUBSCRIPTION_ID=$(echo '${{ github.event.inputs.azure_credentials }}' | jq -r .subscriptionId)
+          
+          IMAGE="${{ env.OPENCLAW_REGISTRY }}/${{ env.OPENCLAW_IMAGE }}:${{ steps.get-tag.outputs.tag }}"
+          echo "Deploying image: $IMAGE"
+          
+          # Usar valores dos secrets ou inputs
+          RESOURCE_GROUP="${{ secrets.AZURE_RESOURCE_GROUP }}"
+          CONTAINER_APP="${{ secrets.AZURE_CONTAINER_APP_NAME }}"
+          
+          if [ -z "$RESOURCE_GROUP" ] || [ -z "$CONTAINER_APP" ]; then
+            echo "❌ AZURE_RESOURCE_GROUP e AZURE_CONTAINER_APP_NAME devem estar configurados nos secrets"
+            exit 1
+          fi
+          
+          az containerapp update \
+            --name "$CONTAINER_APP" \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$IMAGE" \
+            --output table
+
+      - name: Configure A2A Environment Variables
+        run: |
+          RESOURCE_GROUP="${{ secrets.AZURE_RESOURCE_GROUP }}"
+          CONTAINER_APP="${{ secrets.AZURE_CONTAINER_APP_NAME }}"
+          
+          echo "Configurando variáveis de ambiente para A2A..."
+          az containerapp update \
+            --name "$CONTAINER_APP" \
+            --resource-group "$RESOURCE_GROUP" \
+            --set-env-vars \
+              "OPENCLAW_A2A_ENABLED=true" \
+              "OPENCLAW_A2A_AGENT_CARD_ID=openclaw-a2a-agent" \
+              "OPENCLAW_A2A_AGENT_CARD_NAME=OpenClaw A2A Agent" \
+              "OPENCLAW_A2A_AGENT_CARD_DESCRIPTION=OpenClaw multi-channel AI gateway agent with A2A support"
+
+      - name: Verify deployment
+        run: |
+          RESOURCE_GROUP="${{ secrets.AZURE_RESOURCE_GROUP }}"
+          CONTAINER_APP="${{ secrets.AZURE_CONTAINER_APP_NAME }}"
+          
+          echo "Verificando deployment..."
+          az containerapp show \
+            --name "$CONTAINER_APP" \
+            --resource-group "$RESOURCE_GROUP" \
+            --query "{Name:name, Status:properties.runningStatus, URL:properties.configuration.ingress.fqdn, Image:properties.template.containers[0].image}"
+          
+          # Obter URL
+          URL=$(az containerapp show \
+            --name "$CONTAINER_APP" \
+            --resource-group "$RESOURCE_GROUP" \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          
+          echo ""
+          echo "🌐 Container App URL: https://$URL"
+          echo ""
+          echo "Para validar A2A, execute:"
+          echo "  curl https://$URL/.well-known/agent.json"
+
+      - name: A2A Health Check
+        run: |
+          RESOURCE_GROUP="${{ secrets.AZURE_RESOURCE_GROUP }}"
+          CONTAINER_APP="${{ secrets.AZURE_CONTAINER_APP_NAME }}"
+          
+          URL=$(az containerapp show \
+            --name "$CONTAINER_APP" \
+            --resource-group "$RESOURCE_GROUP" \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          
+          echo "Aguardando Container App iniciar..."
+          sleep 10
+          
+          echo "Testando endpoint A2A..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://$URL/.well-known/agent.json" || echo "000")
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ A2A Agent Card está acessível!"
+            echo "Resposta:"
+            curl -s "https://$URL/.well-known/agent.json" | jq '.'
+          else
+            echo "⚠️  A2A Agent Card retornou HTTP $HTTP_CODE"
+            echo "Verifique se a variável OPENCLAW_A2A_ENABLED está configurada"
+          fi
