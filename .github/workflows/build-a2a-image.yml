@@ -1,0 +1,115 @@
+name: Build and Push OpenClaw A2A Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/gateway/a2a-http.ts'
+      - 'Dockerfile.a2a'
+      - '.github/workflows/build-a2a-image.yml'
+
+env:
+  ACR_NAME: acrtemplateopenclaw
+  IMAGE_NAME: openclaw-a2a
+  RESOURCE_GROUP: RG-OPENCLAW
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: |
+          az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=,suffix=,format=short
+            latest
+
+      - name: Build and push A2A image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.a2a
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify image
+        run: |
+          echo "✅ Image pushed successfully!"
+          az acr repository show-tags \
+            --name ${{ env.ACR_NAME }} \
+            --repository ${{ env.IMAGE_NAME }} \
+            --output table
+
+  deploy-to-container-app:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Container App
+        run: |
+          az containerapp update \
+            --name openclaw-zero-person \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest \
+            --output table
+
+      - name: Verify deployment
+        run: |
+          echo "⏳ Waiting for Container App to start..."
+          sleep 30
+          
+          echo "🧪 Testing A2A endpoint..."
+          URL=$(az containerapp show \
+            --name openclaw-zero-person \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://$URL/.well-known/agent.json" || echo "000")
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ A2A is working!"
+            curl -s "https://$URL/.well-known/agent.json" | head -20
+          else
+            echo "⚠️ A2A returned HTTP $HTTP_CODE"
+          fi
