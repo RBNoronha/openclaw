@@ -1,0 +1,132 @@
+name: Build A2A Image (Manual Auth)
+
+on:
+  workflow_dispatch:
+    inputs:
+      azure_credentials:
+        description: 'Azure credentials JSON (from az ad sp create-for-rbac)'
+        required: true
+        type: string
+      tag:
+        description: 'Image tag'
+        required: false
+        default: 'latest'
+        type: string
+
+env:
+  ACR_NAME: acrtemplateopenclaw
+  IMAGE_NAME: openclaw-a2a
+  RESOURCE_GROUP: RG-OPENCLAW
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login with Credentials
+        run: |
+          echo '${{ github.event.inputs.azure_credentials }}' > azure_creds.json
+          az login --service-principal \
+            --username $(jq -r .clientId azure_creds.json) \
+            --password $(jq -r .clientSecret azure_creds.json) \
+            --tenant $(jq -r .tenantId azure_creds.json)
+          az account set --subscription $(jq -r .subscriptionId azure_creds.json)
+          rm azure_creds.json
+          echo "✅ Azure login successful"
+
+      - name: Login to ACR
+        run: |
+          az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push with ACR Task
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          echo "Building image with tag: $TAG"
+          
+          # Criar arquivo de configuração temporário
+          cat > /tmp/buildconfig.json << 'BUILDCONFIG'
+          {
+            "version": "v1.0.0",
+            "steps": [
+              {
+                "id": "build",
+                "build": "-t {{.Run.Registry}}/openclaw-a2a:{{.Run.ID}} -f Dockerfile.a2a ."
+              },
+              {
+                "id": "tag",
+                "cmd": "docker tag {{.Run.Registry}}/openclaw-a2a:{{.Run.ID}} {{.Run.Registry}}/openclaw-a2a:$TAG"
+              },
+              {
+                "id": "push",
+                "push": ["{{.Run.Registry}}/openclaw-a2a:$TAG"]
+              }
+            ]
+          }
+          BUILDCONFIG
+          
+          # Usar az acr build diretamente
+          az acr build \
+            --registry ${{ env.ACR_NAME }} \
+            --image openclaw-a2a:$TAG \
+            --file Dockerfile.a2a \
+            --platform linux/amd64 \
+            .
+
+      - name: Verify image
+        run: |
+          echo "✅ Image built and pushed successfully!"
+          az acr repository show-tags \
+            --name ${{ env.ACR_NAME }} \
+            --repository openclaw-a2a \
+            --output table
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Azure Login
+        run: |
+          echo '${{ github.event.inputs.azure_credentials }}' > azure_creds.json
+          az login --service-principal \
+            --username $(jq -r .clientId azure_creds.json) \
+            --password $(jq -r .clientSecret azure_creds.json) \
+            --tenant $(jq -r .tenantId azure_creds.json)
+          az account set --subscription $(jq -r .subscriptionId azure_creds.json)
+          rm azure_creds.json
+
+      - name: Deploy to Container App
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          az containerapp update \
+            --name openclaw-zero-person \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/openclaw-a2a:$TAG \
+            --output table
+
+      - name: Test A2A endpoint
+        run: |
+          echo "⏳ Waiting for Container App to start..."
+          sleep 30
+          
+          URL=$(az containerapp show \
+            --name openclaw-zero-person \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          
+          echo "Testing A2A at: https://$URL/.well-known/agent.json"
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://$URL/.well-known/agent.json" || echo "000")
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ A2A is working!"
+            curl -s "https://$URL/.well-known/agent.json" | head -20
+          else
+            echo "⚠️ A2A returned HTTP $HTTP_CODE"
+            echo "Checking logs..."
+            az containerapp logs show \
+              --name openclaw-zero-person \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --tail 20
+          fi
