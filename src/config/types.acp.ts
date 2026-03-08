@@ -1,5 +1,34 @@
 import type { AcpSessionUpdateTag } from "../acp/runtime/types.js";
 
+export type A2ASkill = {
+  id: string;
+  name: string;
+  description?: string;
+};
+
+export type A2AAuthConfig = {
+  type?: "bearer" | "none";
+  /** Authentication scheme, e.g. "entra" for Azure AD. */
+  scheme?: string;
+};
+
+export type A2AAgentCardConfig = {
+  /** Unique identifier for this agent in the A2A registry. */
+  id?: string;
+  name?: string;
+  description?: string;
+  /** HTTPS endpoint where this agent receives A2A tasks (POST /a2a). */
+  endpoint?: string;
+  skills?: A2ASkill[];
+  auth?: A2AAuthConfig;
+};
+
+export type A2AConfig = {
+  /** Enables the A2A HTTP endpoints (/.well-known/agent.json, /a2a, /a2a/tasks/:id). */
+  enabled?: boolean;
+  agentCard?: A2AAgentCardConfig;
+};
+
 export type AcpDispatchConfig = {
   /** Master switch for ACP turn dispatch in the reply pipeline. */
   enabled?: boolean;

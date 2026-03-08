@@ -1,0 +1,42 @@
+{
+  "acp": {
+    "enabled": true,
+    "dispatch": {
+      "enabled": true
+    }
+  },
+  "a2a": {
+    "enabled": true,
+    "agentCard": {
+      "id": "openclaw-main-agent",
+      "name": "OpenClaw - Automation Agent",
+      "description": "Agente de automacao Azure e PowerShell via OpenClaw Gateway",
+      "endpoint": "https://seu-openclaw.azurecontainerapps.io/a2a",
+      "skills": [
+        {
+          "id": "powershell-automation",
+          "name": "Automacao PowerShell",
+          "description": "Executa scripts PowerShell para gestao Azure"
+        },
+        {
+          "id": "azure-infra",
+          "name": "Gestao de Infraestrutura Azure",
+          "description": "Provisiona e gerencia recursos Azure"
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "scheme": "entra"
+      }
+    }
+  },
+  "tools": {
+    "agentToAgent": {
+      "enabled": true,
+      "allow": ["*"]
+    },
+    "sessions": {
+      "visibility": "all"
+    }
+  }
+}
