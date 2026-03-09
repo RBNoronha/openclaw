@@ -371,6 +371,18 @@ export const OpenClawSchema = z
     a2a: z
       .object({
         enabled: z.boolean().optional(),
+        peers: z
+          .array(
+            z
+              .object({
+                id: z.string(),
+                endpoint: z.string(),
+                name: z.string().optional(),
+                token: z.string().optional(),
+              })
+              .strict(),
+          )
+          .optional(),
         agentCard: z
           .object({
             id: z.string().optional(),

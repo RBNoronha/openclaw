@@ -23,10 +23,23 @@ export type A2AAgentCardConfig = {
   auth?: A2AAuthConfig;
 };
 
+export type A2APeerConfig = {
+  /** Agent id matching this peer (used for tool routing). */
+  id: string;
+  /** Base URL where this peer exposes its A2A endpoint (e.g. https://coder.internal). */
+  endpoint: string;
+  /** Optional display name. */
+  name?: string;
+  /** Optional Bearer token for authenticated peers. */
+  token?: string;
+};
+
 export type A2AConfig = {
   /** Enables the A2A HTTP endpoints (/.well-known/agent.json, /a2a, /a2a/tasks/:id). */
   enabled?: boolean;
   agentCard?: A2AAgentCardConfig;
+  /** Known peer agents reachable via HTTP A2A (used by the a2a_delegate tool). */
+  peers?: A2APeerConfig[];
 };
 
 export type AcpDispatchConfig = {

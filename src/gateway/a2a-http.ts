@@ -1,9 +1,12 @@
 import crypto from "node:crypto";
+import fs from "node:fs";
+import nodePath from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { resolveAgentDir, resolveAgentWorkspaceDir } from "../agents/agent-scope.js";
 import { runEmbeddedPiAgent } from "../agents/pi-embedded.js";
 import { ensureAgentWorkspace } from "../agents/workspace.js";
 import { loadConfig } from "../config/config.js";
+import { resolveStateDir } from "../config/paths.js";
 import { resolveSessionTranscriptPath } from "../config/sessions.js";
 import type { A2AAgentCardConfig } from "../config/types.acp.js";
 import { DEFAULT_AGENT_ID } from "../routing/session-key.js";
@@ -25,7 +28,47 @@ type A2ARequestHandler = (
   res: ServerResponse,
 ) => Promise<boolean>;
 
+// ─── Persistent task store ────────────────────────────────────────────────────
+// Tasks survive gateway restarts via a JSON file in the state directory.
+// Write-through: every mutation calls persistTaskStore() asynchronously.
+
 const A2A_TASK_STORE = new Map<string, A2ATask>();
+let _storeLoaded = false;
+
+function taskStorePath(): string {
+  return nodePath.join(resolveStateDir(), "a2a-tasks.json");
+}
+
+function loadTaskStore(): void {
+  if (_storeLoaded) return;
+  _storeLoaded = true;
+  try {
+    const raw = fs.readFileSync(taskStorePath(), "utf-8");
+    const entries = JSON.parse(raw) as Array<[string, A2ATask]>;
+    for (const [id, task] of entries) {
+      // Tasks still "running" at startup were interrupted — mark as failed.
+      if (task.status === "running" || task.status === "pending") {
+        task.status = "failed";
+        task.output = "interrupted: gateway restarted";
+        task.updatedAt = Date.now();
+      }
+      A2A_TASK_STORE.set(id, task);
+    }
+  } catch {
+    // File missing or corrupt — start fresh.
+  }
+}
+
+function persistTaskStore(): void {
+  try {
+    const entries = Array.from(A2A_TASK_STORE.entries());
+    // Keep only the 500 most-recent tasks to cap file size.
+    const trimmed = entries.length > 500 ? entries.slice(entries.length - 500) : entries;
+    fs.writeFileSync(taskStorePath(), JSON.stringify(trimmed), "utf-8");
+  } catch {
+    // Non-fatal: worst case tasks are lost on restart.
+  }
+}
 
 function sendJson(res: ServerResponse, status: number, body: unknown) {
   res.statusCode = status;
@@ -81,9 +124,11 @@ function resolveRequestEndpoint(req: IncomingMessage): string {
 export function createA2ARequestHandler(): A2ARequestHandler {
   return async (req, res) => {
     const cfg = loadConfig();
-    if (!cfg.a2a?.enabled) {
+    const a2aEnabled = cfg.a2a?.enabled === true || process.env.OPENCLAW_A2A_ENABLED === "true";
+    if (!a2aEnabled) {
       return false;
     }
+    loadTaskStore();
 
     const url = new URL(req.url ?? "/", "http://localhost");
     const path = url.pathname;
@@ -98,7 +143,7 @@ export function createA2ARequestHandler(): A2ARequestHandler {
         return true;
       }
       const card = buildAgentCard(
-        cfg.a2a.agentCard ?? {},
+        cfg.a2a?.agentCard ?? {},
         resolveRequestEndpoint(req),
       );
       res.statusCode = 200;
@@ -147,6 +192,7 @@ export function createA2ARequestHandler(): A2ARequestHandler {
       A2A_TASK_STORE.set(taskId, task);
       task.status = "running";
       task.updatedAt = Date.now();
+      persistTaskStore();
       sendJson(res, 202, {
         ok: true,
         taskId,
@@ -261,4 +307,5 @@ export function completeA2ATask(
   task.output = result.output;
   task.status = result.status;
   task.updatedAt = Date.now();
+  persistTaskStore();
 }
