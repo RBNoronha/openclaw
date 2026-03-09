@@ -368,6 +368,39 @@ export const OpenClawSchema = z
       })
       .strict()
       .optional(),
+    a2a: z
+      .object({
+        enabled: z.boolean().optional(),
+        agentCard: z
+          .object({
+            id: z.string().optional(),
+            name: z.string().optional(),
+            description: z.string().optional(),
+            endpoint: z.string().optional(),
+            skills: z
+              .array(
+                z
+                  .object({
+                    id: z.string(),
+                    name: z.string(),
+                    description: z.string().optional(),
+                  })
+                  .strict(),
+              )
+              .optional(),
+            auth: z
+              .object({
+                type: z.union([z.literal("bearer"), z.literal("none")]).optional(),
+                scheme: z.string().optional(),
+              })
+              .strict()
+              .optional(),
+          })
+          .strict()
+          .optional(),
+      })
+      .strict()
+      .optional(),
     models: ModelsConfigSchema,
     nodeHost: NodeHostSchema,
     agents: AgentsSchema,
