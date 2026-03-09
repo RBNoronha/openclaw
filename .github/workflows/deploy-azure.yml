@@ -36,7 +36,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
     steps:
       - name: Azure Login
@@ -87,7 +86,6 @@ jobs:
   mirror-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
       packages: read
     if: false  # Set to true to use ACR mirror instead of direct GHCR pull
