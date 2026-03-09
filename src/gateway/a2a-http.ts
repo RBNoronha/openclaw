@@ -1,7 +1,12 @@
 import crypto from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { resolveAgentDir, resolveAgentWorkspaceDir } from "../agents/agent-scope.js";
+import { runEmbeddedPiAgent } from "../agents/pi-embedded.js";
+import { ensureAgentWorkspace } from "../agents/workspace.js";
 import { loadConfig } from "../config/config.js";
+import { resolveSessionTranscriptPath } from "../config/sessions.js";
 import type { A2AAgentCardConfig } from "../config/types.acp.js";
+import { DEFAULT_AGENT_ID } from "../routing/session-key.js";
 import { VERSION } from "../version.js";
 
 export type A2ATask = {
@@ -140,7 +145,6 @@ export function createA2ARequestHandler(): A2ARequestHandler {
         sessionKey: typeof payload.sessionKey === "string" ? payload.sessionKey : undefined,
       };
       A2A_TASK_STORE.set(taskId, task);
-      // Mark as running — actual dispatch happens via webhook/hook pipeline
       task.status = "running";
       task.updatedAt = Date.now();
       sendJson(res, 202, {
@@ -148,6 +152,15 @@ export function createA2ARequestHandler(): A2ARequestHandler {
         taskId,
         status: task.status,
         message: "Task accepted. Poll /a2a/tasks/" + taskId + " for status.",
+      });
+      // Dispatch asynchronously after response is sent
+      setImmediate(() => {
+        dispatchA2ATask(task).catch((err: unknown) => {
+          completeA2ATask(task.id, {
+            output: `Error: ${String(err)}`,
+            status: "failed",
+          });
+        });
       });
       return true;
     }
@@ -187,6 +200,53 @@ export function createA2ARequestHandler(): A2ARequestHandler {
 
     return false;
   };
+}
+
+/** Executes an A2A task by dispatching to the embedded Pi agent runner. */
+async function dispatchA2ATask(task: A2ATask): Promise<void> {
+  const cfg = loadConfig();
+  const agentId = task.agentId ?? DEFAULT_AGENT_ID;
+  const workspaceDirRaw = resolveAgentWorkspaceDir(cfg, agentId);
+  const agentDir = resolveAgentDir(cfg, agentId);
+  const workspace = await ensureAgentWorkspace({ dir: workspaceDirRaw });
+  const workspaceDir = workspace.dir;
+  const sessionId = crypto.randomUUID();
+  const sessionFile = resolveSessionTranscriptPath(sessionId, agentId);
+  const runId = crypto.randomUUID();
+
+  const textParts: string[] = [];
+  const result = await runEmbeddedPiAgent({
+    sessionId,
+    sessionFile,
+    workspaceDir,
+    agentDir,
+    agentId,
+    sessionKey: task.sessionKey,
+    config: cfg,
+    prompt: task.input,
+    timeoutMs: 5 * 60_000,
+    runId,
+    onPartialReply: (payload) => {
+      if (payload.text) {
+        textParts.push(payload.text);
+      }
+    },
+  });
+
+  // Prefer aggregated streaming text; fall back to result payloads
+  let output = textParts.join("");
+  if (!output && result.payloads?.length) {
+    output = result.payloads
+      .filter((p) => p.text && !p.isError)
+      .map((p) => p.text ?? "")
+      .join("\n")
+      .trim();
+  }
+  if (!output) {
+    output = "(no output)";
+  }
+
+  completeA2ATask(task.id, { output, status: "completed" });
 }
 
 /** Updates an A2A task with output and marks it completed/failed. */
